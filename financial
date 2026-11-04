@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCHOOLMITRA - Financial Accounting & School ERP</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mitra: {
+              sidebar: '#00407a',
+              sidebarDark: '#003362',
+              sidebarHover: '#004d94',
+              sidebarActive: '#002b54',
+              orange: '#f39c12',
+              primaryBtn: '#0062a3',
+              primaryHover: '#004d80',
+              textTitle: '#e68a00',
+              grayBg: '#f8fafc',
+              borderLight: '#dbe0e6',
+              tealCog: '#009688'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f9;
+      color: #334155;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 4px;
+    }
+    .sidebar-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden custom-scroll text-sm">
+
+  <!-- ======================================================== -->
+  <!-- 1. LEFT SIDEBAR (EXACT MATCH TO SCHOOLMITRA DESIGN) -->
+  <!-- ======================================================== -->
+  <aside id="mainSidebar" class="w-64 bg-[#00407a] text-white flex-shrink-0 flex flex-col transition-all duration-300 z-50 shadow-lg">
+    <!-- Brand Title (SCHOOL in White, MITRA in Orange) -->
+    <div class="h-14 bg-[#003362] px-4 flex items-center justify-between border-b border-blue-900/50">
+      <div class="flex items-center space-x-1 tracking-wider text-xl font-extrabold cursor-pointer" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')">
+        <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
+      </div>
+      <button onclick="toggleSidebarCollapse()" class="text-white/70 hover:text-white md:hidden">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Sidebar Menu Items -->
+    <div class="flex-grow overflow-y-auto sidebar-scroll py-2 text-xs font-normal">
+      
+      <!-- Financial Accounting (Consolidated Single Parent Menu) -->
+      <div class="bg-[#003362]/60 border-b border-white/5">
+        <button onclick="toggleAccordion('finAccountingSubmenu', 'finAccountingArrow')" class="w-full flex items-center justify-between px-4 py-3 text-white font-semibold hover:bg-white/5 transition">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-scale-balanced text-sm w-4 text-center text-amber-400"></i>
+            <span class="text-sm tracking-wide">Financial Accounting</span>
+          </div>
+          <i id="finAccountingArrow" class="fa-solid fa-chevron-up text-[10px] text-amber-300"></i>
+        </button>
+
+        <!-- Sub-menu Links (Operations & Financial Reports) -->
+        <div id="finAccountingSubmenu" class="bg-[#002b54] py-1 text-white/80 space-y-0.5">
+          <!-- Operations -->
+          <div class="px-4 pt-2 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Entries & Ledgers</div>
+          <button id="navLink-add-ledger" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs font-semibold text-white bg-white/15">
+            <i class="fa-regular fa-folder-open w-4 mr-2 text-amber-400"></i> Add Ledger
+          </button>
+          <button id="navLink-add-subledger" onclick="navigateTo('add-subledger', 'Financial Accounting', 'Add SubLedger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-diagram-project w-4 mr-2 text-blue-300"></i> Add SubLedger
+          </button>
+          <button id="navLink-voucher-entry" onclick="navigateTo('voucher-entry', 'Financial Accounting', 'Voucher Transaction')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-receipt w-4 mr-2 text-emerald-400"></i> Voucher Transaction
+          </button>
+
+          <!-- Day to Day Registers -->
+          <div class="px-4 pt-2.5 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Registers</div>
+          <button id="navLink-day-book" onclick="navigateTo('day-book', 'Financial Accounting', 'Day Book (Transaction Report)')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-regular fa-calendar-check w-4 mr-2 text-cyan-300"></i> Day Book
+          </button>
+          <button id="navLink-passbook" onclick="navigateTo('passbook', 'Financial Accounting', 'Cash & Bank Book (Passbook)')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-building-columns w-4 mr-2 text-indigo-300"></i> Cash &amp; Bank Book
+          </button>
+
+          <!-- Financial Statements & Audit Reports -->
+          <div class="px-4 pt-2.5 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Financial Reports</div>
+          <button id="navLink-ledger-statement" onclick="navigateTo('ledger-statement', 'Financial Accounting', 'Ledger Statement')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-file-invoice-dollar w-4 mr-2 text-purple-300"></i> Ledger Statement
+          </button>
+          <button id="navLink-trial-balance" onclick="navigateTo('trial-balance', 'Financial Accounting', 'Trial Balance')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-table-list w-4 mr-2 text-amber-300"></i> Trial Balance
+          </button>
+          <button id="navLink-income-expenditure" onclick="navigateTo('income-expenditure', 'Financial Accounting', 'Income & Expenditure Account')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-chart-line w-4 mr-2 text-emerald-400"></i> Income &amp; Expenditure
+          </button>
+          <button id="navLink-balance-sheet" onclick="navigateTo('balance-sheet', 'Financial Accounting', 'Balance Sheet')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-vault w-4 mr-2 text-amber-400"></i> Balance Sheet
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Left Sidebar Footer: System Status -->
+    <div class="bg-[#002b54] p-3 text-[11px] text-blue-200 border-t border-white/10 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Accrual Ledger Engine</span>
+      </div>
+      <span class="text-[10px] bg-blue-900 px-1.5 py-0.5 rounded text-white font-mono">v4.2</span>
+    </div>
+  </aside>
+
+  <!-- ======================================================== -->
+  <!-- 2. MAIN CONTENT WRAPPER -->
+  <!-- ======================================================== -->
+  <div class="flex-grow flex flex-col h-full overflow-hidden bg-white">
+    
+    <!-- TOP HEADER BAR (EXACT SCREENSHOT LAYOUT) -->
+    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 z-30 flex-shrink-0">
+      
+      <!-- Left: Toggle Icon & Session / School dropdowns -->
+      <div class="flex items-center space-x-3">
+        <button onclick="toggleSidebarCollapse()" class="text-gray-500 hover:text-gray-700 p-1.5 rounded focus:outline-none">
+          <i class="fa-solid fa-bars text-base"></i>
+        </button>
+
+        <!-- Select Session -->
+        <div class="hidden sm:flex flex-col">
+          <label class="text-[10px] text-gray-500 font-medium -mb-1">Select Session</label>
+          <select id="topSessionSelect" class="bg-white border border-gray-300 text-xs font-semibold rounded px-2.5 py-1 text-gray-700 outline-none focus:border-blue-500 cursor-pointer">
+            <option value="2026-27" selected>2026-27</option>
+            <option value="2025-26">2025-26</option>
+          </select>
+        </div>
+
+        <!-- Select School -->
+        <div class="hidden md:flex flex-col">
+          <label class="text-[10px] text-gray-500 font-medium -mb-1">Select School</label>
+          <select class="bg-white border border-gray-300 text-xs font-semibold rounded px-2.5 py-1 text-gray-700 outline-none w-44">
+            <option selected>DEMO PUBLIC SCHOOL</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center & Right: School Logo + Name + Varanasi UP -->
+      <div class="flex items-center space-x-3 sm:space-x-5">
+        
+        <!-- School Crest & Title -->
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-[10px] text-gray-600 font-bold bg-gray-50">
+            logo
+          </div>
+          <div class="text-left">
+            <h1 class="text-sm font-black text-[#00407a] leading-tight tracking-wide">DEMO PUBLIC SCHOOL</h1>
+            <p class="text-[10px] text-gray-500 font-semibold">Varanasi Uttar Pradesh</p>
+          </div>
+        </div>
+
+        <!-- Green Badge: Today's Collection -->
+        <button onclick="showTodaySummaryModal()" class="bg-[#198754] hover:bg-[#157347] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center space-x-1 transition cursor-pointer">
+          <span>₹</span>
+          <span>Today's Collection: <strong id="todayCollectionAmount" class="font-mono">₹45,000</strong></span>
+        </button>
+
+        <!-- User Dropdown & Cog -->
+        <div class="flex items-center space-x-2 border-l pl-3 border-gray-200">
+          <div class="w-7 h-7 rounded-full bg-gray-200 text-gray-600 border border-gray-300 flex items-center justify-center text-[10px] font-bold">
+            logo
+          </div>
+          <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- SUB-HEADER BREADCRUMB BAR -->
+    <div class="bg-gray-100 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600 flex-shrink-0">
+      <div class="flex items-center space-x-2 font-medium">
+        <span id="breadcrumbCategory" class="text-gray-700 font-semibold">Financial Accounting</span>
+        <span class="text-gray-400">&gt;</span>
+        <span id="breadcrumbPage" class="text-gray-900 font-bold">Add Ledger</span>
+      </div>
+      <div class="flex items-center space-x-3 text-[11px]">
+        <span class="font-mono text-gray-500"><i class="fa-regular fa-clock mr-1"></i> 04-Nov-2026</span>
+        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono font-semibold" id="quickCashDisplay">Cash: ₹18,500</span>
+        <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-semibold" id="quickBankDisplay">ICICI: ₹4,25,000</span>
+      </div>
+    </div>
+
+    <!-- MAIN SCROLLABLE BODY -->
+    <main class="flex-grow overflow-y-auto p-4 sm:p-6 bg-[#f4f6f9] custom-scroll">
+      
+      <!-- ======================================================== -->
+      <!-- MODULE 1: ADD LEDGER (SCREENSHOT REPLICA + ACCOUNTING) -->
+      <section id="view-add-ledger" class="space-y-6">
+        
+        <!-- Form Header Matching Orange Title in Screenshot -->
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-3">Add Ledger</h2>
+        </div>
+
+        <!-- Add Ledger Form Card -->
+        <div class="bg-white rounded border border-gray-200 p-5 shadow-sm">
+          <form id="ledgerCreationForm" onsubmit="handleFormSubmitLedger(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            
+            <!-- Group (Replacing the non-standard 'Product' dropdown) -->
+            <div class="md:col-span-3">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                Account Group <span class="text-red-500">*</span>
+              </label>
+              <select id="inputLedgerGroup" required class="w-full bg-white border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
+                <option value="" disabled selected>Select Account Group</option>
+                <optgroup label="Assets">
+                  <option value="Bank Accounts">Bank Accounts</option>
+                  <option value="Cash-in-Hand">Cash-in-Hand</option>
+                  <option value="Current Assets">Current Assets (Fees Receivable, Debtors)</option>
+                  <option value="Fixed Assets">Fixed Assets (Building, Computers, Furniture)</option>
+                </optgroup>
+                <optgroup label="Liabilities & Fund">
+                  <option value="Current Liabilities">Current Liabilities (Advance Fees, Creditors)</option>
+                  <option value="Corpus / Capital Fund">Corpus / Trust Capital Fund</option>
+                </optgroup>
+                <optgroup label="Income & Expenses">
+                  <option value="Direct Income">Direct Income (Tuition & Admission Fees)</option>
+                  <option value="Indirect Income">Indirect Income (Bank Interest, Misc)</option>
+                  <option value="Indirect Expenses">Indirect Expenses (Staff Salary, Maintenance)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- Ledger Name -->
+            <div class="md:col-span-3">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                Ledger Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="inputLedgerName" placeholder="Ledger Name" required
+                class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+
+            <!-- In-Charge -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                In-Charge
+              </label>
+              <input type="text" id="inputLedgerInCharge" placeholder="In-Charge Name"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+
+            <!-- Opening Balance (Financial Requirement) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                Opening Balance
+              </label>
+              <div class="flex">
+                <input type="number" id="inputLedgerOpBal" placeholder="0.00" min="0" step="0.01" value="0"
+                  class="w-full border border-gray-300 rounded-l px-2.5 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none font-mono" />
+                <select id="inputLedgerBalType" class="border border-l-0 border-gray-300 rounded-r bg-gray-50 text-xs font-bold px-2 text-gray-700">
+                  <option value="Dr">Dr</option>
+                  <option value="Cr">Cr</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Click To Add Button (Exact match from screenshot) -->
+            <div class="md:col-span-2">
+              <button type="submit" class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 px-4 rounded shadow-sm transition flex items-center justify-center space-x-1">
+                <span>Click To Add</span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Section: Check & Edit Entries (Exact match from screenshot) -->
+        <div class="space-y-3">
+          <h3 class="text-xl font-bold text-[#e68a00]">Check &amp; Edit Entries</h3>
+
+          <div class="bg-white rounded border border-gray-200 p-4 shadow-sm">
+            <div class="mb-4">
+              <input type="text" id="ledgerSearchInput" oninput="renderLedgersTable()" placeholder="Search Here"
+                class="w-full sm:w-80 border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+
+            <!-- Table with Sortable Columns matching screenshot -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-white text-blue-900 border-b border-gray-200">
+                  <tr class="font-bold">
+                    <th class="py-3 px-4 text-[#0062a3] cursor-pointer" onclick="sortLedgers('group')">
+                      Account Group <i class="fa-solid fa-sort ml-1 text-gray-400"></i>
+                    </th>
+                    <th class="py-3 px-4 text-[#0062a3] cursor-pointer" onclick="sortLedgers('name')">
+                      <i class="fa-solid fa-sort-up text-[#0062a3] mr-1"></i> Ledger Name
+                    </th>
+                    <th class="py-3 px-4 text-[#0062a3] cursor-pointer" onclick="sortLedgers('incharge')">
+                      <i class="fa-solid fa-sort text-gray-400 mr-1"></i> In-Charge
+                    </th>
+                    <th class="py-3 px-4 text-right text-[#0062a3]">Opening Bal (₹)</th>
+                    <th class="py-3 px-4 text-center text-[#0062a3]">Category</th>
+                    <th class="py-3 px-4 text-center text-[#0062a3]">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgersTableBody" class="divide-y divide-gray-100 text-gray-800">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Count Footer -->
+            <div class="mt-3 text-[11px] text-gray-500 flex justify-between items-center pt-2 border-t border-gray-100">
+              <span>Showing <strong id="ledgerFilteredCount">0</strong> ledgers</span>
+              <span class="text-gray-400">SchoolMitra Financial Ledger Master</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 1B: ADD SUBLEDGER -->
+      <!-- ======================================================== -->
+      <section id="view-add-subledger" class="space-y-6 hidden">
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Add SubLedger</h2>
+          <p class="text-xs text-gray-500">Create secondary ledger accounts mapped under a primary parent ledger.</p>
+        </div>
+
+        <!-- Add SubLedger Form Card -->
+        <div class="bg-white rounded border border-gray-200 p-5 shadow-sm">
+          <form id="subLedgerCreationForm" onsubmit="handleFormSubmitSubLedger(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <!-- Parent Ledger -->
+            <div class="md:col-span-4">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                Parent Ledger <span class="text-red-500">*</span>
+              </label>
+              <select id="inputSubParentLedger" required class="w-full bg-white border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
+                <!-- Injected via JS -->
+              </select>
+            </div>
+
+            <!-- SubLedger Name -->
+            <div class="md:col-span-4">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                SubLedger Name <span class="text-red-500">*</span>
+              </label>
+              <input type="text" id="inputSubLedgerName" placeholder="e.g. Class 10 Tuition Fee or Staff Bonus" required
+                class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+
+            <!-- SubLedger Code / In-Charge -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700 mb-1">
+                SubLedger Code
+              </label>
+              <input type="text" id="inputSubLedgerCode" placeholder="SUB-101"
+                class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none uppercase font-mono" />
+            </div>
+
+            <!-- Add SubLedger Button -->
+            <div class="md:col-span-2">
+              <button type="submit" class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 px-4 rounded shadow-sm transition flex items-center justify-center space-x-1">
+                <span>Add SubLedger</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SubLedger List Card -->
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
+          <h3 class="text-base font-bold text-gray-800">Existing SubLedgers</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-4">Code</th>
+                  <th class="py-2.5 px-4">SubLedger Name</th>
+                  <th class="py-2.5 px-4">Parent Ledger Account</th>
+                  <th class="py-2.5 px-4">Account Group</th>
+                  <th class="py-2.5 px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="subLedgersTableBody" class="divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 2: VOUCHER TRANSACTION (DOUBLE-ENTRY BALANCED) -->
+      <!-- ======================================================== -->
+      <section id="view-voucher-entry" class="space-y-6 hidden">
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Voucher Transaction</h2>
+          <p class="text-xs text-gray-500">Double-entry accounting transaction form. Total Dr must equal Total Cr.</p>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-5 shadow-sm space-y-4">
+          
+          <!-- Top Row: Session, Voucher Type, No, Date -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pb-3 border-b border-gray-100">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Session</label>
+              <input type="text" value="2026-27" readonly class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-1.5 text-xs font-semibold text-gray-700">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Voucher Type <span class="text-red-500">*</span></label>
+              <select id="vchTypeSelect" onchange="onVoucherTypeChange()" class="w-full bg-white border border-[#e68a00] rounded px-3 py-1.5 text-xs font-bold text-gray-800 outline-none">
+                <option value="Receipt">Receipt (F6 - Fee & Revenue Collection)</option>
+                <option value="Payment">Payment (F5 - Salary, Expenses, Vendor)</option>
+                <option value="Contra">Contra (F4 - Bank & Cash Transfers)</option>
+                <option value="Journal">Journal (F7 - Due, Depreciation, Adjustments)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">* Voucher No</label>
+              <input type="text" id="vchNumberInput" value="VR-109" readonly class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-1.5 text-xs font-mono font-bold text-[#00407a]">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">* Voucher Date</label>
+              <input type="date" id="vchDateInput" value="2026-11-04" class="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs text-gray-800 outline-none">
+            </div>
+          </div>
+
+          <!-- Mode Reference -->
+          <div class="bg-gray-50 p-3 rounded border border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">Payment Mode Reference</label>
+              <select id="vchPaymentMode" class="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs">
+                <option value="Cash">Cash</option>
+                <option value="UPI / Online">Online / UPI Transfer</option>
+                <option value="Cheque">Bank Cheque / DD</option>
+                <option value="Direct / NA">Direct Journal (Non-Cash)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">Cheque / UTR / Transaction No.</label>
+              <input type="text" id="vchInstrumentNo" placeholder="e.g. UTR-982138249 or Cheque #10293" class="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">Common Narration</label>
+              <input type="text" id="vchMainNarration" placeholder="e.g. Being tuition fees collected for Class 10th" class="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs">
+            </div>
+          </div>
+
+          <!-- Dynamic Double Entry Grid -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-gray-700 uppercase">Double Entry Grid</span>
+              <span class="text-[11px] text-gray-500">Requirement: Total Debit must equal Total Credit</span>
+            </div>
+
+            <div class="overflow-x-auto border border-gray-200 rounded">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-gray-100 text-gray-700 border-b border-gray-200">
+                  <tr>
+                    <th class="py-2.5 px-3 w-16 text-center">Type</th>
+                    <th class="py-2.5 px-3 w-72">Ledger Account</th>
+                    <th class="py-2.5 px-3 w-36 text-right">Debit (₹)</th>
+                    <th class="py-2.5 px-3 w-36 text-right">Credit (₹)</th>
+                    <th class="py-2.5 px-3">Row Note</th>
+                    <th class="py-2.5 px-3 w-12 text-center">Del</th>
+                  </tr>
+                </thead>
+                <tbody id="vchRowsContainer" class="divide-y divide-gray-100 bg-white">
+                  <!-- Dynamically Rendered -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-2 flex justify-between items-center">
+              <button type="button" onclick="addVoucherRowItem()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded border border-gray-300 flex items-center gap-1">
+                <i class="fa-solid fa-plus text-[#e68a00]"></i> + Add Row
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Balancing Status Panel -->
+          <div class="bg-gray-100 p-4 rounded border border-gray-300 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-6 text-xs">
+              <div>
+                <span class="text-gray-500 block">Total Debit:</span>
+                <span id="vchSumDebit" class="font-mono text-sm font-bold text-gray-800">₹0.00</span>
+              </div>
+              <div class="text-gray-300">|</div>
+              <div>
+                <span class="text-gray-500 block">Total Credit:</span>
+                <span id="vchSumCredit" class="font-mono text-sm font-bold text-gray-800">₹0.00</span>
+              </div>
+              <div class="text-gray-300">|</div>
+              <div>
+                <span class="text-gray-500 block">Difference:</span>
+                <span id="vchSumDiff" class="font-mono text-sm font-bold text-red-600">₹0.00</span>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+              <div id="vchStatusBadge" class="px-3 py-1 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                Incomplete
+              </div>
+              <button id="btnSaveVoucherSubmit" onclick="submitVoucherEntry()" disabled class="bg-gray-400 text-white text-xs font-bold py-2.5 px-5 rounded shadow cursor-not-allowed transition">
+                Save Voucher Transaction
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 3: TRANSACTION REPORT (DAY BOOK) -->
+      <!-- ======================================================== -->
+      <section id="view-day-book" class="space-y-6 hidden">
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Transaction Report (Day Book)</h2>
+          <p class="text-xs text-gray-500">Chronological register of all daily voucher entries</p>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-2">
+              <label class="text-xs font-bold text-gray-600">Filter Type:</label>
+              <select id="dayBookFilter" onchange="renderDayBookEntries()" class="text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white">
+                <option value="ALL">All Types</option>
+                <option value="Receipt">Receipts Only</option>
+                <option value="Payment">Payments Only</option>
+                <option value="Journal">Journal Only</option>
+                <option value="Contra">Contra Only</option>
+              </select>
+            </div>
+            <input type="text" id="dayBookSearchInput" oninput="renderDayBookEntries()" placeholder="Search Vch No or Ledger..." class="text-xs border border-gray-300 rounded px-3 py-1.5 w-60">
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Vch No.</th>
+                  <th class="py-2.5 px-3">Type</th>
+                  <th class="py-2.5 px-3">Particulars (Ledger Split)</th>
+                  <th class="py-2.5 px-3 text-right">Debit (₹)</th>
+                  <th class="py-2.5 px-3 text-right">Credit (₹)</th>
+                  <th class="py-2.5 px-3">Narration / Ref</th>
+                </tr>
+              </thead>
+              <tbody id="dayBookTableContent" class="divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 4: PASSBOOK (CASH & BANK REGISTER) -->
+      <!-- ======================================================== -->
+      <section id="view-passbook" class="space-y-6 hidden">
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Passbook Register</h2>
+          <p class="text-xs text-gray-500">Daily passbook statement and running balance for Cash and Bank accounts</p>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3 border-b border-gray-200 pb-3">
+            <label class="text-xs font-bold text-gray-700">Choose Passbook Account:</label>
+            <select id="passbookAccountSelect" onchange="renderPassbookData()" class="text-xs border-2 border-[#0062a3] rounded px-3 py-1.5 font-bold text-gray-800 bg-white">
+              <!-- Injected via JS -->
+            </select>
+          </div>
+
+          <!-- Passbook Summary Ribbon -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-blue-50 p-3 rounded border border-blue-200 text-xs">
+            <div>
+              <span class="text-gray-500 block">Opening Balance (01-Apr-2026):</span>
+              <strong id="passbookOpBal" class="text-gray-800 font-mono text-sm font-bold">₹0.00</strong>
+            </div>
+            <div>
+              <span class="text-gray-500 block">Total Receipts (Deposits / Dr):</span>
+              <strong id="passbookTotalIn" class="text-emerald-700 font-mono text-sm font-bold">₹0.00</strong>
+            </div>
+            <div>
+              <span class="text-gray-500 block">Current Closing Balance:</span>
+              <strong id="passbookClosingBal" class="text-[#00407a] font-mono text-base font-bold">₹0.00</strong>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Vch No</th>
+                  <th class="py-2.5 px-3">Particulars (Opposite Account)</th>
+                  <th class="py-2.5 px-3 text-right">Debit / In (₹)</th>
+                  <th class="py-2.5 px-3 text-right">Credit / Out (₹)</th>
+                  <th class="py-2.5 px-3 text-right">Balance (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="passbookTableBody" class="divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 5: LEDGER STATEMENT -->
+      <!-- ======================================================== -->
+      <section id="view-ledger-statement" class="space-y-6 hidden">
+        <div>
+          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Ledger Statement</h2>
+          <p class="text-xs text-gray-500">Individual ledger detailed statement with opening, debits, credits, and closing balance.</p>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3 border-b border-gray-200 pb-3">
+            <label class="text-xs font-bold text-gray-700">Select Ledger Account:</label>
+            <select id="ledgerSelectStatement" onchange="renderSelectedLedgerStatement()" class="text-xs border-2 border-[#e68a00] rounded px-3 py-1.5 font-bold text-gray-800 bg-white w-72">
+              <!-- Injected via JS -->
+            </select>
+          </div>
+
+          <!-- Summary info -->
+          <div class="bg-amber-50/70 border border-amber-200 p-3 rounded grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <span class="text-gray-500 block">Ledger Name:</span>
+              <strong id="stmtLedgerName" class="text-gray-800 font-bold">-</strong>
+            </div>
+            <div>
+              <span class="text-gray-500 block">Account Group:</span>
+              <span id="stmtLedgerGroup" class="inline-block bg-white border border-amber-300 px-2 py-0.5 rounded text-amber-900 font-semibold">-</span>
+            </div>
+            <div>
+              <span class="text-gray-500 block">Opening Balance:</span>
+              <strong id="stmtOpeningBal" class="text-gray-800 font-mono">₹0.00</strong>
+            </div>
+            <div>
+              <span class="text-gray-500 block">Closing Balance:</span>
+              <strong id="stmtClosingBal" class="text-blue-800 font-mono font-bold text-sm">₹0.00</strong>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Vch No</th>
+                  <th class="py-2.5 px-3">Particulars</th>
+                  <th class="py-2.5 px-3 text-right">Debit (₹)</th>
+                  <th class="py-2.5 px-3 text-right">Credit (₹)</th>
+                  <th class="py-2.5 px-3 text-right">Running Balance (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerStatementTableBody" class="divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 6: TRIAL BALANCE -->
+      <!-- ======================================================== -->
+      <section id="view-trial-balance" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Trial Balance</h2>
+            <p class="text-xs text-gray-500">As on 04-Nov-2026 | All accounts mathematical balance verification</p>
+          </div>
+          <div id="trialBalBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <i class="fa-solid fa-circle-check mr-1"></i> Books Balanced
+          </div>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-4">S.No.</th>
+                  <th class="py-2.5 px-4">Ledger Particulars</th>
+                  <th class="py-2.5 px-4">Account Group</th>
+                  <th class="py-2.5 px-4 text-right">Debit Balance (₹)</th>
+                  <th class="py-2.5 px-4 text-right">Credit Balance (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="trialBalanceTableBody" class="divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </tbody>
+              <tfoot class="bg-gray-100 border-t-2 border-gray-300 font-bold text-xs text-gray-900">
+                <tr>
+                  <td colspan="3" class="py-3 px-4 text-right uppercase">Grand Total:</td>
+                  <td id="tbGrandDebit" class="py-3 px-4 text-right font-mono text-sm text-[#00407a]">₹0.00</td>
+                  <td id="tbGrandCredit" class="py-3 px-4 text-right font-mono text-sm text-[#00407a]">₹0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 7: INCOME & EXPENDITURE ACCOUNT -->
+      <!-- ======================================================== -->
+      <section id="view-income-expenditure" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Income &amp; Expenditure Account</h2>
+            <p class="text-xs text-gray-500">School operational profit &amp; loss statement for the session 2026-27</p>
+          </div>
+          <span id="pnlSurplusBadge" class="px-3 py-1 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
+            Surplus: Calculating...
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Left: Expenditure -->
+          <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="bg-red-50 text-red-900 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-red-200 flex justify-between">
+                <span>Expenditure</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div id="incExpExpList" class="p-3 space-y-1.5 text-xs divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+            <div class="bg-gray-50 p-3 border-t border-gray-200 flex justify-between text-xs font-bold text-gray-800">
+              <span>Total Expenditure:</span>
+              <span id="incExpTotalExpDisplay" class="font-mono">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Right: Income -->
+          <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="bg-emerald-50 text-emerald-900 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-emerald-200 flex justify-between">
+                <span>Income</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div id="incExpIncList" class="p-3 space-y-1.5 text-xs divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+            <div class="bg-gray-50 p-3 border-t border-gray-200 flex justify-between text-xs font-bold text-gray-800">
+              <span>Total Revenue Income:</span>
+              <span id="incExpTotalIncDisplay" class="font-mono">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- MODULE 8: BALANCE SHEET -->
+      <!-- ======================================================== -->
+      <section id="view-balance-sheet" class="space-y-6 hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Balance Sheet</h2>
+            <p class="text-xs text-gray-500">As on 04-Nov-2026 | Liabilities &amp; Trust Fund = Assets</p>
+          </div>
+          <div id="bsMatchBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            Balance Sheet Matched
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Liabilities -->
+          <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="bg-gray-100 text-gray-800 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 flex justify-between">
+                <span>Liabilities &amp; Corpus Fund</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div id="bsLiabList" class="p-3 space-y-1.5 text-xs divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+            <div class="bg-gray-50 p-3 border-t-2 border-gray-300 flex justify-between text-xs font-bold text-gray-900">
+              <span>Total Liabilities:</span>
+              <span id="bsTotalLiabDisplay" class="font-mono text-sm text-[#00407a]">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Assets -->
+          <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="bg-gray-100 text-gray-800 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 flex justify-between">
+                <span>Assets</span>
+                <span>Amount (₹)</span>
+              </div>
+              <div id="bsAssetList" class="p-3 space-y-1.5 text-xs divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+            <div class="bg-gray-50 p-3 border-t-2 border-gray-300 flex justify-between text-xs font-bold text-gray-900">
+              <span>Total Assets:</span>
+              <span id="bsTotalAssetDisplay" class="font-mono text-sm text-[#00407a]">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FLOATING SETTINGS COG (MATCHING SCREENSHOT TEAL COG ICON) -->
+    <div class="fixed bottom-4 right-4 z-40">
+      <button onclick="showSettingsModal()" class="w-10 h-10 rounded bg-[#009688] hover:bg-[#00796b] text-white shadow-lg flex items-center justify-center transition focus:outline-none">
+        <i class="fa-solid fa-gear text-base"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="appToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2.5 rounded-md shadow-2xl text-xs flex items-center space-x-2 transform translate-y-24 transition-all duration-300 z-50">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Operation successful!</span>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT STATE ENGINE -->
+  <!-- ======================================================== -->
+  <script>
+    // PRE-LOADED REALISTIC DATA MATCHING SCREENSHOT & ACCOUNTING RULES
+    const INITIAL_LEDGERS = [
+      { id: 'L1', name: 'ICICI Bank A/c 0033499', group: 'Bank Accounts', incharge: 'ABC', opBal: 425000, opType: 'Dr' },
+      { id: 'L2', name: 'Cash In Hand', group: 'Cash-in-Hand', incharge: 'CASH IN HAND', opBal: 18500, opType: 'Dr' },
+      { id: 'L3', name: 'Tuition Fee Income', group: 'Direct Income', incharge: 'ABC', opBal: 0, opType: 'Cr' },
+      { id: 'L4', name: 'Staff Salary & Remuneration', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
+      { id: 'L5', name: 'Staff Benefits & Allowances', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
+      { id: 'L6', name: 'Administrative & Office Operations', group: 'Indirect Expenses', incharge: 'CASH IN HAND', opBal: 0, opType: 'Dr' },
+      { id: 'L7', name: 'ERP Expenses', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
+      { id: 'L8', name: 'Fees Receivable (Students Due)', group: 'Current Assets', incharge: 'Accounts Office', opBal: 85000, opType: 'Dr' },
+      { id: 'L9', name: 'Advance Fees (Received in Advance)', group: 'Current Liabilities', incharge: 'Accounts Office', opBal: 35000, opType: 'Cr' },
+      { id: 'L10', name: 'M/s Sharma Stationery & Supplies', group: 'Current Liabilities', incharge: 'Store Keeper', opBal: 12000, opType: 'Cr' },
+      { id: 'L11', name: 'School Furniture & Lab Equipment', group: 'Fixed Assets', incharge: 'Lab Assistant', opBal: 350000, opType: 'Dr' },
+      { id: 'L12', name: 'Corpus & Trust General Fund', group: 'Corpus / Capital Fund', incharge: 'Management', opBal: 831500, opType: 'Cr' }
+    ];
+
+    const INITIAL_SUBLEDGERS = [
+      { id: 'SL1', code: 'SUB-101', name: 'Class 9 Tuition Fee', parentLedgerId: 'L3' },
+      { id: 'SL2', code: 'SUB-102', name: 'Class 10 Tuition Fee', parentLedgerId: 'L3' },
+      { id: 'SL3', code: 'SUB-103', name: 'Primary Teachers Salary', parentLedgerId: 'L4' },
+      { id: 'SL4', code: 'SUB-104', name: 'Secondary Teachers Salary', parentLedgerId: 'L4' }
+    ];
+
+    const INITIAL_VOUCHERS = [
+      {
+        id: 'VR-101',
+        date: '2026-11-01',
+        type: 'Receipt',
+        refMode: 'UPI / Online',
+        refNo: 'UPI/983427382/Tuition',
+        narration: 'Tuition fees received via online portal for Q3',
+        rows: [
+          { ledgerId: 'L1', dr: 35000, cr: 0, remark: 'ICICI Bank credited' },
+          { ledgerId: 'L3', dr: 0, cr: 35000, remark: 'Tuition Fee collection' }
+        ]
+      },
+      {
+        id: 'VR-102',
+        date: '2026-11-02',
+        type: 'Payment',
+        refMode: 'Cheque',
+        refNo: 'CHQ-88201',
+        narration: 'Staff salaries paid through bank transfer for October',
+        rows: [
+          { ledgerId: 'L4', dr: 95000, cr: 0, remark: 'Teacher and staff salary' },
+          { ledgerId: 'L1', dr: 0, cr: 95000, remark: 'Paid via ICICI Bank' }
+        ]
+      },
+      {
+        id: 'VR-103',
+        date: '2026-11-03',
+        type: 'Contra',
+        refMode: 'Cash',
+        refNo: 'SLIP-4410',
+        narration: 'Cash drawn from ICICI Bank for petty cash requirements',
+        rows: [
+          { ledgerId: 'L2', dr: 10000, cr: 0, remark: 'Cash in Hand increased' },
+          { ledgerId: 'L1', dr: 0, cr: 10000, remark: 'Withdrawn from ICICI Bank' }
+        ]
+      },
+      {
+        id: 'VR-104',
+        date: '2026-11-04',
+        type: 'Receipt',
+        refMode: 'Cash',
+        refNo: 'RCPT-501',
+        narration: 'Cash tuition fee collected at fee counter today',
+        rows: [
+          { ledgerId: 'L2', dr: 10000, cr: 0, remark: 'Cash collected' },
+          { ledgerId: 'L3', dr: 0, cr: 10000, remark: 'Tuition fees' }
+        ]
+      }
+    ];
+
+    let ledgers = JSON.parse(localStorage.getItem('SM_LEDGERS')) || INITIAL_LEDGERS;
+    let subLedgers = JSON.parse(localStorage.getItem('SM_SUBLEDGERS')) || INITIAL_SUBLEDGERS;
+    let vouchers = JSON.parse(localStorage.getItem('SM_VOUCHERS')) || INITIAL_VOUCHERS;
+    let nextVchCounter = vouchers.length + 105;
+
+    let voucherDraftRows = [
+      { ledgerId: '', dr: 0, cr: 0, remark: '' },
+      { ledgerId: '', dr: 0, cr: 0, remark: '' }
+    ];
+
+    let currentSortColumn = 'name';
+    let sortAscending = true;
+
+    // INIT
+    window.onload = function() {
+      renderLedgersTable();
+      renderSubLedgersTable();
+      populateDropdownOptions();
+      setupVoucherDraft();
+      calculateMasterBalances();
+      renderPassbookData();
+    };
+
+    // SIDEBAR NAVIGATION HANDLER
+    function navigateTo(viewId, category, pageTitle) {
+      const views = [
+        'add-ledger', 'add-subledger', 'voucher-entry', 'day-book', 'passbook',
+        'ledger-statement', 'trial-balance', 'income-expenditure', 'balance-sheet'
+      ];
+
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.add('hidden');
+
+        const navBtn = document.getElementById(`navLink-${v}`);
+        if (navBtn) {
+          navBtn.classList.remove('bg-white/15', 'font-semibold', 'text-white');
+          navBtn.classList.add('text-white/80');
+        }
+      });
+
+      const targetView = document.getElementById(`view-${viewId}`);
+      if (targetView) targetView.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`navLink-${viewId}`);
+      if (activeNav) {
+        activeNav.classList.add('bg-white/15', 'font-semibold', 'text-white');
+        activeNav.classList.remove('text-white/80');
+      }
+
+      document.getElementById('breadcrumbCategory').innerText = category;
+      document.getElementById('breadcrumbPage').innerText = pageTitle;
+
+      // Trigger recalculation and render for reports
+      calculateMasterBalances();
+      if (viewId === 'day-book') renderDayBookEntries();
+      if (viewId === 'passbook') renderPassbookData();
+      if (viewId === 'ledger-statement') renderSelectedLedgerStatement();
+      if (viewId === 'add-subledger') renderSubLedgersTable();
+
+      // Mobile close sidebar
+      if (window.innerWidth < 768) {
+        document.getElementById('mainSidebar').classList.add('-translate-x-full');
+      }
+    }
+
+    function toggleAccordion(contentId, arrowId) {
+      const content = document.getElementById(contentId);
+      const arrow = document.getElementById(arrowId);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        arrow.className = 'fa-solid fa-chevron-up text-[10px] text-amber-300';
+      } else {
+        content.classList.add('hidden');
+        arrow.className = 'fa-solid fa-chevron-down text-[10px] text-white/50';
+      }
+    }
+
+    function toggleSidebarCollapse() {
+      const sidebar = document.getElementById('mainSidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    }
+
+    function showToast(msg, isErr = false) {
+      const t = document.getElementById('appToast');
+      const icon = document.getElementById('toastIcon');
+      document.getElementById('toastMsg').innerText = msg;
+      icon.className = isErr ? "fa-solid fa-circle-exclamation text-red-400" : "fa-solid fa-circle-check text-emerald-400";
+      t.classList.remove('translate-y-24');
+      setTimeout(() => t.classList.add('translate-y-24'), 3200);
+    }
+
+    // ==========================================
+    // MODULE 1B: ADD SUBLEDGER
+    // ==========================================
+    function handleFormSubmitSubLedger(e) {
+      e.preventDefault();
+      const parentId = document.getElementById('inputSubParentLedger').value;
+      const name = document.getElementById('inputSubLedgerName').value.trim();
+      const code = document.getElementById('inputSubLedgerCode').value.trim() || `SUB-${subLedgers.length + 101}`;
+
+      if (!parentId || !name) {
+        showToast('Please select a Parent Ledger and SubLedger Name!', true);
+        return;
+      }
+
+      const newSub = {
+        id: 'SL' + (Date.now() % 100000),
+        code,
+        name,
+        parentLedgerId: parentId
+      };
+
+      subLedgers.push(newSub);
+      saveState();
+      renderSubLedgersTable();
+      document.getElementById('subLedgerCreationForm').reset();
+      showToast(`SubLedger "${name}" added under parent ledger!`);
+    }
+
+    function renderSubLedgersTable() {
+      const tbody = document.getElementById('subLedgersTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      subLedgers.forEach(s => {
+        const parent = ledgers.find(l => l.id === s.parentLedgerId) || { name: 'Unknown', group: 'N/A' };
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-mono font-bold text-[#00407a]">${escapeHtml(s.code)}</td>
+          <td class="py-2.5 px-4 font-semibold text-gray-800">${escapeHtml(s.name)}</td>
+          <td class="py-2.5 px-4 text-gray-700">${escapeHtml(parent.name)}</td>
+          <td class="py-2.5 px-4 text-gray-500 font-semibold">${escapeHtml(parent.group)}</td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="deleteSubLedger('${s.id}')" title="Delete" class="text-gray-400 hover:text-red-600">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteSubLedger(id) {
+      subLedgers = subLedgers.filter(s => s.id !== id);
+      saveState();
+      renderSubLedgersTable();
+      showToast('SubLedger deleted.');
+    }
+
+    // ==========================================
+    // MODULE 1: ADD LEDGER
+    // ==========================================
+    function handleFormSubmitLedger(e) {
+      e.preventDefault();
+      const group = document.getElementById('inputLedgerGroup').value;
+      const name = document.getElementById('inputLedgerName').value.trim();
+      const incharge = document.getElementById('inputLedgerInCharge').value.trim() || 'ABC';
+      const opBal = parseFloat(document.getElementById('inputLedgerOpBal').value) || 0;
+      const opType = document.getElementById('inputLedgerBalType').value;
+
+      if (!name || !group) {
+        showToast('Please specify both Ledger Name and Group!', true);
+        return;
+      }
+
+      if (ledgers.some(l => l.name.toLowerCase() === name.toLowerCase())) {
+        showToast('Ledger with this name already exists!', true);
+        return;
+      }
+
+      const newLedger = {
+        id: 'L' + (Date.now() % 100000),
+        name,
+        group,
+        incharge,
+        opBal,
+        opType
+      };
+
+      ledgers.push(newLedger);
+      saveState();
+      renderLedgersTable();
+      populateDropdownOptions();
+      calculateMasterBalances();
+
+      document.getElementById('ledgerCreationForm').reset();
+      document.getElementById('inputLedgerOpBal').value = '0';
+      showToast(`Ledger "${name}" added successfully!`);
+    }
+
+    function sortLedgers(col) {
+      if (currentSortColumn === col) {
+        sortAscending = !sortAscending;
+      } else {
+        currentSortColumn = col;
+        sortAscending = true;
+      }
+      renderLedgersTable();
+    }
+
+    function renderLedgersTable() {
+      const tbody = document.getElementById('ledgersTableBody');
+      const search = (document.getElementById('ledgerSearchInput').value || '').toLowerCase();
+      tbody.innerHTML = '';
+
+      let list = ledgers.filter(l => 
+        l.name.toLowerCase().includes(search) || 
+        l.group.toLowerCase().includes(search) || 
+        l.incharge.toLowerCase().includes(search)
+      );
+
+      list.sort((a, b) => {
+        let valA = a[currentSortColumn] ? a[currentSortColumn].toString().toLowerCase() : '';
+        let valB = b[currentSortColumn] ? b[currentSortColumn].toString().toLowerCase() : '';
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+
+      document.getElementById('ledgerFilteredCount').innerText = list.length;
+
+      list.forEach(l => {
+        const isPnL = ['Direct Income', 'Indirect Income', 'Indirect Expenses'].includes(l.group);
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-amber-50/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-semibold text-gray-700">${escapeHtml(l.group)}</td>
+          <td class="py-2.5 px-4 font-bold text-gray-900">${escapeHtml(l.name)}</td>
+          <td class="py-2.5 px-4 text-gray-600">${escapeHtml(l.incharge)}</td>
+          <td class="py-2.5 px-4 text-right font-mono text-gray-800">
+            ${l.opBal > 0 ? `₹${l.opBal.toLocaleString('en-IN', {minimumFractionDigits: 2})} <span class="font-bold text-[10px] text-gray-500">${l.opType}</span>` : '₹0.00'}
+          </td>
+          <td class="py-2.5 px-4 text-center">
+            <span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+              ${isPnL ? 'Income & Exp' : 'Balance Sheet'}
+            </span>
+          </td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="editLedgerAction('${l.id}')" title="Edit" class="text-blue-600 hover:text-blue-800 mr-2">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteLedgerAction('${l.id}')" title="Delete" class="text-gray-400 hover:text-red-600">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteLedgerAction(id) {
+      const isUsed = vouchers.some(v => v.rows.some(r => r.ledgerId === id));
+      if (isUsed) {
+        showToast('Cannot delete! Ledger is used in transaction vouchers.', true);
+        return;
+      }
+      ledgers = ledgers.filter(l => l.id !== id);
+      saveState();
+      renderLedgersTable();
+      populateDropdownOptions();
+      calculateMasterBalances();
+      showToast('Ledger deleted.');
+    }
+
+    function editLedgerAction(id) {
+      const l = ledgers.find(x => x.id === id);
+      if (!l) return;
+      document.getElementById('inputLedgerName').value = l.name;
+      document.getElementById('inputLedgerGroup').value = l.group;
+      document.getElementById('inputLedgerInCharge').value = l.incharge;
+      document.getElementById('inputLedgerOpBal').value = l.opBal;
+      document.getElementById('inputLedgerBalType').value = l.opType;
+      showToast(`Loaded ${l.name} into form for editing.`);
+    }
+
+    // ==========================================
+    // MODULE 2: VOUCHER TRANSACTION
+    // ==========================================
+    function setupVoucherDraft() {
+      document.getElementById('vchNumberInput').value = `VR-${nextVchCounter++}`;
+      document.getElementById('vchDateInput').value = '2026-11-04';
+      document.getElementById('vchInstrumentNo').value = '';
+      document.getElementById('vchMainNarration').value = '';
+
+      voucherDraftRows = [
+        { ledgerId: '', dr: 0, cr: 0, remark: '' },
+        { ledgerId: '', dr: 0, cr: 0, remark: '' }
+      ];
+      renderVoucherRowsDraft();
+    }
+
+    function onVoucherTypeChange() {
+      const type = document.getElementById('vchTypeSelect').value;
+      const mode = document.getElementById('vchPaymentMode');
+      if (type === 'Receipt') mode.value = 'UPI / Online';
+      else if (type === 'Payment') mode.value = 'Cheque';
+      else if (type === 'Contra') mode.value = 'Cash';
+      else if (type === 'Journal') mode.value = 'Direct / NA';
+    }
+
+    function renderVoucherRowsDraft() {
+      const container = document.getElementById('vchRowsContainer');
+      container.innerHTML = '';
+
+      voucherDraftRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50";
+
+        let opts = '<option value="" disabled selected>-- Select Ledger --</option>';
+        ledgers.forEach(l => {
+          opts += `<option value="${l.id}" ${row.ledgerId === l.id ? 'selected' : ''}>${escapeHtml(l.name)} (${l.group})</option>`;
+        });
+
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-center font-bold">
+            <span class="px-2 py-0.5 rounded text-[11px] ${row.dr > 0 ? 'bg-blue-100 text-blue-800' : (row.cr > 0 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500')}">
+              ${row.dr > 0 ? 'Dr' : (row.cr > 0 ? 'Cr' : (idx === 0 ? 'Dr' : 'Cr'))}
+            </span>
+          </td>
+          <td class="py-2 px-3">
+            <select onchange="updateRowField(${idx}, 'ledgerId', this.value)" class="w-full text-xs border border-gray-300 rounded px-2 py-1.5 bg-white outline-none">
+              ${opts}
+            </select>
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" min="0" value="${row.dr || ''}" placeholder="0.00"
+              oninput="updateRowAmt(${idx}, 'dr', this.value)"
+              class="w-full text-right text-xs border border-gray-300 rounded px-2 py-1.5 font-mono outline-none" />
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" min="0" value="${row.cr || ''}" placeholder="0.00"
+              oninput="updateRowAmt(${idx}, 'cr', this.value)"
+              class="w-full text-right text-xs border border-gray-300 rounded px-2 py-1.5 font-mono outline-none" />
+          </td>
+          <td class="py-2 px-3">
+            <input type="text" value="${escapeHtml(row.remark || '')}" placeholder="Line note"
+              oninput="updateRowField(${idx}, 'remark', this.value)"
+              class="w-full text-xs border border-gray-200 rounded px-2 py-1 outline-none" />
+          </td>
+          <td class="py-2 px-3 text-center">
+            ${voucherDraftRows.length > 2 ? `
+              <button onclick="removeVoucherRowItem(${idx})" class="text-gray-400 hover:text-red-500">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            ` : `<span class="text-gray-300">-</span>`}
+          </td>
+        `;
+        container.appendChild(tr);
+      });
+
+      validateVoucherCalculations();
+    }
+
+    function addVoucherRowItem() {
+      voucherDraftRows.push({ ledgerId: '', dr: 0, cr: 0, remark: '' });
+      renderVoucherRowsDraft();
+    }
+
+    function removeVoucherRowItem(i) {
+      if (voucherDraftRows.length <= 2) return;
+      voucherDraftRows.splice(i, 1);
+      renderVoucherRowsDraft();
+    }
+
+    function updateRowAmt(i, type, val) {
+      const num = parseFloat(val) || 0;
+      if (type === 'dr') {
+        voucherDraftRows[i].dr = num;
+        if (num > 0) voucherDraftRows[i].cr = 0;
+      } else {
+        voucherDraftRows[i].cr = num;
+        if (num > 0) voucherDraftRows[i].dr = 0;
+      }
+      renderVoucherRowsDraft();
+    }
+
+    function updateRowField(i, field, val) {
+      voucherDraftRows[i][field] = val;
+      validateVoucherCalculations();
+    }
+
+    function validateVoucherCalculations() {
+      let sumDr = 0;
+      let sumCr = 0;
+
+      voucherDraftRows.forEach(r => {
+        sumDr += (parseFloat(r.dr) || 0);
+        sumCr += (parseFloat(r.cr) || 0);
+      });
+
+      const diff = Math.abs(sumDr - sumCr);
+      document.getElementById('vchSumDebit').innerText = `₹${sumDr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('vchSumCredit').innerText = `₹${sumCr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('vchSumDiff').innerText = `₹${diff.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+      const badge = document.getElementById('vchStatusBadge');
+      const submitBtn = document.getElementById('btnSaveVoucherSubmit');
+
+      const allValid = voucherDraftRows.every(r => r.ledgerId !== '' && (r.dr > 0 || r.cr > 0));
+
+      if (sumDr > 0 && sumCr > 0 && diff < 0.01 && allValid) {
+        badge.className = "px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        badge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Balanced (Dr = Cr)';
+        submitBtn.disabled = false;
+        submitBtn.className = "bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 px-5 rounded shadow cursor-pointer transition";
+      } else {
+        badge.className = "px-3 py-1 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-300";
+        badge.innerHTML = diff > 0 ? `Unbalanced (Diff: ₹${diff.toFixed(2)})` : 'Incomplete Fields';
+        submitBtn.disabled = true;
+        submitBtn.className = "bg-gray-400 text-white text-xs font-bold py-2.5 px-5 rounded shadow cursor-not-allowed transition";
+      }
+    }
+
+    function submitVoucherEntry() {
+      const vchNo = document.getElementById('vchNumberInput').value;
+      const vchDate = document.getElementById('vchDateInput').value;
+      const vchType = document.getElementById('vchTypeSelect').value;
+      const refMode = document.getElementById('vchPaymentMode').value;
+      const refNo = document.getElementById('vchInstrumentNo').value.trim() || 'N/A';
+      const narration = document.getElementById('vchMainNarration').value.trim() || `Voucher entry under ${vchType}`;
+
+      const newVch = {
+        id: vchNo,
+        date: vchDate,
+        type: vchType,
+        refMode,
+        refNo,
+        narration,
+        rows: voucherDraftRows.map(r => ({
+          ledgerId: r.ledgerId,
+          dr: parseFloat(r.dr) || 0,
+          cr: parseFloat(r.cr) || 0,
+          remark: r.remark || ''
+        }))
+      };
+
+      vouchers.unshift(newVch);
+      saveState();
+
+      showToast(`Voucher ${vchNo} posted to accounts!`);
+      setupVoucherDraft();
+      calculateMasterBalances();
+      renderDayBookEntries();
+      renderPassbookData();
+      renderSelectedLedgerStatement();
+    }
+
+    // ==========================================
+    // MODULE 3: DAY BOOK
+    // ==========================================
+    function renderDayBookEntries() {
+      const tbody = document.getElementById('dayBookTableContent');
+      const filter = document.getElementById('dayBookFilter').value;
+      const query = (document.getElementById('dayBookSearchInput').value || '').toLowerCase();
+      tbody.innerHTML = '';
+
+      const filtered = vouchers.filter(v => {
+        if (filter !== 'ALL' && v.type !== filter) return false;
+        if (query) {
+          const matchNo = v.id.toLowerCase().includes(query);
+          const matchNar = v.narration.toLowerCase().includes(query);
+          const matchLed = v.rows.some(r => {
+            const l = ledgers.find(x => x.id === r.ledgerId);
+            return l && l.name.toLowerCase().includes(query);
+          });
+          return matchNo || matchNar || matchLed;
+        }
+        return true;
+      });
+
+      filtered.forEach(v => {
+        const total = v.rows.reduce((sum, r) => sum + r.dr, 0);
+        let splitHtml = '<div class="space-y-0.5 font-mono">';
+        v.rows.forEach(r => {
+          const l = ledgers.find(x => x.id === r.ledgerId) || { name: 'Unknown' };
+          if (r.dr > 0) {
+            splitHtml += `<div><span class="text-blue-700 font-bold">Dr.</span> ${escapeHtml(l.name)}</div>`;
+          } else {
+            splitHtml += `<div class="pl-4"><span class="text-amber-700 font-bold">To</span> ${escapeHtml(l.name)}</div>`;
+          }
+        });
+        splitHtml += '</div>';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-gray-600">${v.date}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-[#00407a]">${v.id}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${getVchBadge(v.type)}">${v.type}</span></td>
+          <td class="py-2.5 px-3">${splitHtml}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+          <td class="py-2.5 px-3 text-gray-500 text-[11px]">
+            <div>${escapeHtml(v.narration)}</div>
+            <div class="text-[10px] text-gray-400">Ref: ${v.refMode} (${v.refNo})</div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400 italic">No vouchers found.</td></tr>';
+      }
+    }
+
+    function getVchBadge(type) {
+      if (type === 'Receipt') return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+      if (type === 'Payment') return 'bg-rose-100 text-rose-800 border border-rose-300';
+      if (type === 'Contra') return 'bg-purple-100 text-purple-800 border border-purple-300';
+      return 'bg-blue-100 text-blue-800 border border-blue-300';
+    }
+
+    // ==========================================
+    // MODULE 4: PASSBOOK
+    // ==========================================
+    function renderPassbookData() {
+      const select = document.getElementById('passbookAccountSelect');
+      const selectedId = select.value || 'L1';
+      const ledger = ledgers.find(l => l.id === selectedId);
+      if (!ledger) return;
+
+      document.getElementById('passbookOpBal').innerText = `₹${ledger.opBal.toLocaleString('en-IN', {minimumFractionDigits: 2})} ${ledger.opType}`;
+
+      const tbody = document.getElementById('passbookTableBody');
+      tbody.innerHTML = '';
+
+      let running = (ledger.opType === 'Dr' ? ledger.opBal : -ledger.opBal);
+      let totalIn = 0;
+
+      // Add opening line
+      const trOp = document.createElement('tr');
+      trOp.className = "bg-gray-50 italic font-semibold text-gray-600";
+      trOp.innerHTML = `
+        <td class="py-2 px-3">2026-04-01</td>
+        <td class="py-2 px-3">-</td>
+        <td class="py-2 px-3">Opening Balance Brought Forward</td>
+        <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Dr' ? '₹' + ledger.opBal.toFixed(2) : '-'}</td>
+        <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Cr' ? '₹' + ledger.opBal.toFixed(2) : '-'}</td>
+        <td class="py-2 px-3 text-right font-mono font-bold text-gray-800">₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} ${running >= 0 ? 'Dr' : 'Cr'}</td>
+      `;
+      tbody.appendChild(trOp);
+
+      vouchers.slice().reverse().forEach(v => {
+        v.rows.forEach(r => {
+          if (r.ledgerId === ledger.id) {
+            running += (r.dr - r.cr);
+            if (r.dr > 0) totalIn += r.dr;
+
+            const opp = v.rows.find(x => x.ledgerId !== ledger.id);
+            const oppLed = opp ? ledgers.find(l => l.id === opp.ledgerId) : null;
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-blue-50/40 border-b border-gray-100";
+            tr.innerHTML = `
+              <td class="py-2 px-3 text-gray-600">${v.date}</td>
+              <td class="py-2 px-3 font-mono text-[#00407a] font-bold">${v.id}</td>
+              <td class="py-2 px-3">
+                <span class="font-medium text-gray-900">${oppLed ? escapeHtml(oppLed.name) : 'Multiple Ledgers'}</span>
+                <span class="block text-[10px] text-gray-400">${escapeHtml(v.narration)}</span>
+              </td>
+              <td class="py-2 px-3 text-right font-mono text-emerald-700 font-semibold">${r.dr > 0 ? '₹' + r.dr.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+              <td class="py-2 px-3 text-right font-mono text-rose-700 font-semibold">${r.cr > 0 ? '₹' + r.cr.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+              <td class="py-2 px-3 text-right font-mono font-bold text-gray-900">
+                ₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} <span class="text-[10px] text-gray-500">${running >= 0 ? 'Dr' : 'Cr'}</span>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+      });
+
+      document.getElementById('passbookTotalIn').innerText = `₹${totalIn.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('passbookClosingBal').innerText = `₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} ${running >= 0 ? 'Dr' : 'Cr'}`;
+    }
+
+    // ==========================================
+    // MODULE 5: LEDGER STATEMENT
+    // ==========================================
+    function renderSelectedLedgerStatement() {
+      const select = document.getElementById('ledgerSelectStatement');
+      const selectedId = select.value || 'L4';
+      const ledger = ledgers.find(l => l.id === selectedId);
+      if (!ledger) return;
+
+      document.getElementById('stmtLedgerName').innerText = ledger.name;
+      document.getElementById('stmtLedgerGroup').innerText = ledger.group;
+      document.getElementById('stmtOpeningBal').innerText = `₹${ledger.opBal.toLocaleString('en-IN', {minimumFractionDigits: 2})} ${ledger.opType}`;
+
+      const tbody = document.getElementById('ledgerStatementTableBody');
+      tbody.innerHTML = '';
+
+      let running = (ledger.opType === 'Dr' ? ledger.opBal : -ledger.opBal);
+
+      // Add Opening
+      const trOp = document.createElement('tr');
+      trOp.className = "bg-gray-50 italic font-semibold text-gray-600";
+      trOp.innerHTML = `
+        <td class="py-2 px-3">2026-04-01</td>
+        <td class="py-2 px-3">-</td>
+        <td class="py-2 px-3">Opening Balance B/F</td>
+        <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Dr' ? '₹' + ledger.opBal.toFixed(2) : '-'}</td>
+        <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Cr' ? '₹' + ledger.opBal.toFixed(2) : '-'}</td>
+        <td class="py-2 px-3 text-right font-mono font-bold text-gray-800">₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} ${running >= 0 ? 'Dr' : 'Cr'}</td>
+      `;
+      tbody.appendChild(trOp);
+
+      vouchers.slice().reverse().forEach(v => {
+        v.rows.forEach(r => {
+          if (r.ledgerId === ledger.id) {
+            running += (r.dr - r.cr);
+            const opp = v.rows.find(x => x.ledgerId !== ledger.id);
+            const oppLed = opp ? ledgers.find(l => l.id === opp.ledgerId) : null;
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-amber-50/40 border-b border-gray-100";
+            tr.innerHTML = `
+              <td class="py-2 px-3 text-gray-600">${v.date}</td>
+              <td class="py-2 px-3 font-mono text-[#00407a] font-bold">${v.id}</td>
+              <td class="py-2 px-3 font-medium text-gray-900">
+                ${oppLed ? escapeHtml(oppLed.name) : 'Multiple Ledger Allocation'}
+                <span class="block text-[10px] text-gray-400">${escapeHtml(v.narration)}</span>
+              </td>
+              <td class="py-2 px-3 text-right font-mono text-blue-700">${r.dr > 0 ? '₹' + r.dr.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+              <td class="py-2 px-3 text-right font-mono text-amber-700">${r.cr > 0 ? '₹' + r.cr.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+              <td class="py-2 px-3 text-right font-mono font-bold text-gray-900">
+                ₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} <span class="text-[10px] text-gray-500">${running >= 0 ? 'Dr' : 'Cr'}</span>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          }
+        });
+      });
+
+      document.getElementById('stmtClosingBal').innerText = `₹${Math.abs(running).toLocaleString('en-IN', {minimumFractionDigits: 2})} ${running >= 0 ? 'Dr' : 'Cr'}`;
+    }
+
+    // ==========================================
+    // RECALCULATE ACCOUNTS & REPORTS
+    // ==========================================
+    function calculateMasterBalances() {
+      const map = {};
+      ledgers.forEach(l => {
+        map[l.id] = {
+          ledger: l,
+          net: (l.opType === 'Dr' ? l.opBal : -l.opBal)
+        };
+      });
+
+      vouchers.forEach(v => {
+        v.rows.forEach(r => {
+          if (map[r.ledgerId]) {
+            map[r.ledgerId].net += (r.dr - r.cr);
+          }
+        });
+      });
+
+      // Quick Top Widgets
+      const cashObj = ledgers.find(l => l.group === 'Cash-in-Hand');
+      const bankObj = ledgers.find(l => l.group === 'Bank Accounts');
+      const cashBal = cashObj && map[cashObj.id] ? map[cashObj.id].net : 0;
+      const bankBal = bankObj && map[bankObj.id] ? map[bankObj.id].net : 0;
+
+      document.getElementById('quickCashDisplay').innerText = `Cash: ₹${cashBal.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+      document.getElementById('quickBankDisplay').innerText = `ICICI: ₹${bankBal.toLocaleString('en-IN', {maximumFractionDigits: 0})}`;
+
+      // Today's collection sum
+      const todayVouchers = vouchers.filter(v => v.date === '2026-11-04' && v.type === 'Receipt');
+      const todaySum = todayVouchers.reduce((acc, v) => acc + v.rows.reduce((s, r) => s + r.dr, 0), 0);
+      document.getElementById('todayCollectionAmount').innerText = `₹${todaySum.toLocaleString('en-IN')}`;
+
+      renderTrialBalance(map);
+      renderIncomeExpAndBS(map);
+    }
+
+    function renderTrialBalance(map) {
+      const tbody = document.getElementById('trialBalanceTableBody');
+      tbody.innerHTML = '';
+
+      let grandDr = 0;
+      let grandCr = 0;
+      let sno = 1;
+
+      Object.values(map).forEach(({ ledger, net }) => {
+        const drAmt = net > 0 ? net : 0;
+        const crAmt = net < 0 ? Math.abs(net) : 0;
+
+        grandDr += drAmt;
+        grandCr += crAmt;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="py-2 px-4 text-gray-500 font-mono">${sno++}</td>
+          <td class="py-2 px-4 font-semibold text-gray-900">${escapeHtml(ledger.name)}</td>
+          <td class="py-2 px-4 text-gray-600">${escapeHtml(ledger.group)}</td>
+          <td class="py-2 px-4 text-right font-mono text-gray-800">${drAmt > 0 ? '₹' + drAmt.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+          <td class="py-2 px-4 text-right font-mono text-gray-800">${crAmt > 0 ? '₹' + crAmt.toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('tbGrandDebit').innerText = `₹${grandDr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('tbGrandCredit').innerText = `₹${grandCr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+      const badge = document.getElementById('trialBalBadge');
+      if (Math.abs(grandDr - grandCr) < 0.01) {
+        badge.className = "px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        badge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Books Perfectly Balanced (Dr = Cr)';
+      } else {
+        badge.className = "px-3 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+        badge.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Mismatch: ₹${Math.abs(grandDr - grandCr).toFixed(2)}`;
+      }
+    }
+
+    function renderIncomeExpAndBS(map) {
+      const expList = document.getElementById('incExpExpList');
+      const incList = document.getElementById('incExpIncList');
+      expList.innerHTML = '';
+      incList.innerHTML = '';
+
+      let totalExp = 0;
+      let totalInc = 0;
+
+      Object.values(map).forEach(({ ledger, net }) => {
+        if (ledger.group === 'Indirect Expenses') {
+          const amt = net;
+          totalExp += amt;
+          expList.innerHTML += `
+            <div class="flex justify-between py-1 text-gray-700">
+              <span>${escapeHtml(ledger.name)}</span>
+              <span class="font-mono font-semibold">₹${amt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            </div>
+          `;
+        } else if (['Direct Income', 'Indirect Income'].includes(ledger.group)) {
+          const amt = Math.abs(net);
+          totalInc += amt;
+          incList.innerHTML += `
+            <div class="flex justify-between py-1 text-gray-700">
+              <span>${escapeHtml(ledger.name)}</span>
+              <span class="font-mono font-semibold">₹${amt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            </div>
+          `;
+        }
+      });
+
+      document.getElementById('incExpTotalExpDisplay').innerText = `₹${totalExp.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('incExpTotalIncDisplay').innerText = `₹${totalInc.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+      const netSurplus = totalInc - totalExp;
+      const surplusBadge = document.getElementById('pnlSurplusBadge');
+      if (netSurplus >= 0) {
+        surplusBadge.className = "px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        surplusBadge.innerText = `Net Surplus: ₹${netSurplus.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      } else {
+        surplusBadge.className = "px-3 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+        surplusBadge.innerText = `Net Deficit: ₹${Math.abs(netSurplus).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      }
+
+      // Balance Sheet Mapping
+      const liabList = document.getElementById('bsLiabList');
+      const assetList = document.getElementById('bsAssetList');
+      liabList.innerHTML = '';
+      assetList.innerHTML = '';
+
+      let totalLiab = 0;
+      let totalAsset = 0;
+
+      Object.values(map).forEach(({ ledger, net }) => {
+        if (['Fixed Assets', 'Current Assets', 'Bank Accounts', 'Cash-in-Hand'].includes(ledger.group)) {
+          const amt = net;
+          totalAsset += amt;
+          assetList.innerHTML += `
+            <div class="flex justify-between py-1 text-gray-700">
+              <div>
+                <span class="font-medium">${escapeHtml(ledger.name)}</span>
+                <span class="text-[10px] text-gray-400 block">${ledger.group}</span>
+              </div>
+              <span class="font-mono font-semibold">₹${amt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            </div>
+          `;
+        } else if (['Current Liabilities', 'Corpus / Capital Fund'].includes(ledger.group)) {
+          const amt = Math.abs(net);
+          totalLiab += amt;
+          liabList.innerHTML += `
+            <div class="flex justify-between py-1 text-gray-700">
+              <div>
+                <span class="font-medium">${escapeHtml(ledger.name)}</span>
+                <span class="text-[10px] text-gray-400 block">${ledger.group}</span>
+              </div>
+              <span class="font-mono font-semibold">₹${amt.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            </div>
+          `;
+        }
+      });
+
+      // Surplus added to Liabilities side
+      totalLiab += netSurplus;
+      liabList.innerHTML += `
+        <div class="flex justify-between py-1 text-blue-900 bg-blue-50 p-1.5 rounded font-semibold mt-2">
+          <span>Add: Current Year Surplus (I&E Account)</span>
+          <span class="font-mono">₹${netSurplus.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+        </div>
+      `;
+
+      document.getElementById('bsTotalLiabDisplay').innerText = `₹${totalLiab.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      document.getElementById('bsTotalAssetDisplay').innerText = `₹${totalAsset.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+      const bsBadge = document.getElementById('bsMatchBadge');
+      if (Math.abs(totalLiab - totalAsset) < 1.0) {
+        bsBadge.className = "px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        bsBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Balance Sheet Matched (Assets = Liabilities)';
+      } else {
+        bsBadge.className = "px-3 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+        bsBadge.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Diff: ₹${Math.abs(totalLiab - totalAsset).toFixed(2)}`;
+      }
+    }
+
+    function populateDropdownOptions() {
+      // SubLedger Parent Selector
+      const subParentSelect = document.getElementById('inputSubParentLedger');
+      if (subParentSelect) {
+        subParentSelect.innerHTML = '<option value="" disabled selected>-- Select Parent Ledger --</option>';
+        ledgers.forEach(l => {
+          const o = document.createElement('option');
+          o.value = l.id;
+          o.innerText = `${l.name} (${l.group})`;
+          subParentSelect.appendChild(o);
+        });
+      }
+
+      // Passbook selector
+      const pSelect = document.getElementById('passbookAccountSelect');
+      pSelect.innerHTML = '';
+      ledgers.filter(l => ['Bank Accounts', 'Cash-in-Hand'].includes(l.group)).forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.id;
+        o.innerText = `${l.name} (${l.group})`;
+        pSelect.appendChild(o);
+      });
+
+      // Statement selector
+      const sSelect = document.getElementById('ledgerSelectStatement');
+      sSelect.innerHTML = '';
+      ledgers.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.id;
+        o.innerText = `${l.name} (${l.group})`;
+        sSelect.appendChild(o);
+      });
+    }
+
+    function showTodaySummaryModal() {
+      const todayVouchers = vouchers.filter(v => v.date === '2026-11-04' && v.type === 'Receipt');
+      const todaySum = todayVouchers.reduce((acc, v) => acc + v.rows.reduce((s, r) => s + r.dr, 0), 0);
+      showToast(`Today's Collection: ₹${todaySum.toLocaleString('en-IN')} across ${todayVouchers.length} receipt vouchers.`);
+    }
+
+    function showSettingsModal() {
+      showToast('SchoolMitra System Settings: Academic Session 2026-27 Active.');
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('SM_LEDGERS', JSON.stringify(ledgers));
+        localStorage.setItem('SM_SUBLEDGERS', JSON.stringify(subLedgers));
+        localStorage.setItem('SM_VOUCHERS', JSON.stringify(vouchers));
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
