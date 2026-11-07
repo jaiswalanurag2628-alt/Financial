@@ -1037,91 +1037,81 @@
     });
 
     // 1. AUTH CHECK ON LOAD
-    async function checkAuthSession() {
-      const { data: { session }, error } = await sbClient.auth.getSession();
+  // Auth Check on Page Load / After Login
+async function checkAuthSession() {
+  const { data: { session }, error } = await sbClient.auth.getSession();
 
-      if (profile.is_super_admin) {
-  document.getElementById('superAdminNavBlock').classList.remove('hidden');
-} else {
-  document.getElementById('superAdminNavBlock').classList.add('hidden');
-}
-
-function openMasterOnboardingModal() {
-  document.getElementById('masterSchoolModal').classList.remove('hidden');
-}
-
-function closeMasterOnboardingModal() {
-  document.getElementById('masterSchoolModal').classList.add('hidden');
-}
-
-async function handleMasterSchoolCreation(e) {
-  e.preventDefault();
-  const schoolName = document.getElementById('mSchoolName').value.trim();
-  const city = document.getElementById('mSchoolCity').value.trim();
-  const accountantName = document.getElementById('mAccountantName').value.trim();
-  const email = document.getElementById('mAccountantEmail').value.trim();
-  const password = document.getElementById('mAccountantPassword').value;
-
-  const btn = document.getElementById('btnMasterSubmit');
-  btn.disabled = true;
-  btn.innerText = "Provisioning...";
-
-  // 1. Call Master RPC function (Secured by RLS)
-  const { data: rpcRes, error: rpcErr } = await sbClient.rpc('master_create_school_account', {
-    p_school_name: schoolName,
-    p_school_city: city,
-    p_operator_name: accountantName,
-    p_user_email: email,
-    p_user_password: password
-  });
-
-  if (rpcErr) {
-    btn.disabled = false;
-    btn.innerText = "Provision School & Generate Credentials";
-    return alert("Failed: " + rpcErr.message);
+  if (!session) {
+    document.getElementById('authModal').classList.remove('hidden');
+    const statusText = document.getElementById('sidebarStatusText');
+    if (statusText) statusText.innerText = "Not Authenticated";
+    return;
   }
 
-  // 2. School ready hone ke baad user details alert karein
-  alert(`School "${schoolName}" created successfully!\n\nProvide these login credentials to the school:\nEmail: ${email}\nPassword: ${password}`);
-  closeMasterOnboardingModal();
-  btn.disabled = false;
-  btn.innerText = "Provision School & Generate Credentials";
-}
+  currentSessionUser = session.user;
 
-      if (!session) {
-        document.getElementById('authModal').classList.remove('hidden');
-        document.getElementById('sidebarStatusText').innerText = "Not Authenticated";
-        return;
-      }
+  // 1. Pehle database se profile aur school fetch karein
+  const { data: profileData, error: profErr } = await sbClient
+    .from('profiles')
+    .select('*, schools(*)')
+    .eq('id', session.user.id)
+    .maybeSingle();
 
-      currentSessionUser = session.user;
+  if (profErr) {
+    console.error("Profile fetch error:", profErr.message);
+    showToast("Error loading profile: " + profErr.message, true);
+    return;
+  }
 
-      const { data: profile, error: profErr } = await sbClient
-        .from('profiles')
-        .select('*, schools(*)')
-        .eq('id', session.user.id)
-        .maybeSingle();
+  if (!profileData || !profileData.schools) {
+    console.warn("User has logged in, but no profile/school found for UID:", session.user.id);
+    document.getElementById('authModal').classList.remove('hidden');
+    const statusText = document.getElementById('sidebarStatusText');
+    if (statusText) statusText.innerText = "Profile Incomplete";
+    showToast("Account not linked to any school. Please contact Admin.", true);
+    return;
+  }
 
-      if (profile && profile.schools) {
-        currentProfile = profile;
-        currentSchoolId = profile.school_id;
-        CURRENT_USER = profile.full_name || "Financial Admin";
+  // 2. Profile milne ke baad global variables update karein
+  currentProfile = profileData;
+  currentSchoolId = profileData.school_id;
+  CURRENT_USER = profileData.full_name || "Financial Admin";
 
-        // Update Dynamic UI Headers
-        document.getElementById('topSchoolHeading').innerText = profile.schools.name;
-        document.getElementById('topSchoolSubheading').innerText = `${profile.schools.city} ${profile.schools.state}`;
-        document.getElementById('topSchoolDropdownOpt').innerText = profile.schools.name;
-        document.getElementById('currentOperatorName').innerText = profile.full_name;
-        document.getElementById('currentOperatorRole').innerText = profile.role ? profile.role.toUpperCase() : "ACCOUNTANT";
-        document.getElementById('currentOperatorAvatar').innerText = profile.full_name ? profile.full_name.split(' ').map(n=>n[0]).join('').slice(0, 2) : "AJ";
-        document.getElementById('slipPreparedBy').innerText = profile.full_name;
-        document.getElementById('sidebarStatusText').innerText = "Live Synced";
+  // 3. Super Admin Menu Toggle (Master Check)
+  const superAdminNav = document.getElementById('superAdminNavBlock');
+  if (superAdminNav) {
+    if (currentProfile.is_super_admin) {
+      superAdminNav.classList.remove('hidden');
+    } else {
+      superAdminNav.classList.add('hidden');
+    }
+  }
 
-        document.getElementById('authModal').classList.add('hidden');
-        showToast(`Welcome ${profile.full_name}! Loaded ${profile.schools.name}`);
+  // 4. UI Headers dynamically update karein
+  const topSchoolHeading = document.getElementById('topSchoolHeading');
+  const topSchoolSubheading = document.getElementById('topSchoolSubheading');
+  const topSchoolDropdownOpt = document.getElementById('topSchoolDropdownOpt');
+  const currentOperatorName = document.getElementById('currentOperatorName');
+  const currentOperatorRole = document.getElementById('currentOperatorRole');
+  const currentOperatorAvatar = document.getElementById('currentOperatorAvatar');
+  const slipPreparedBy = document.getElementById('slipPreparedBy');
+  const sidebarStatusText = document.getElementById('sidebarStatusText');
 
-        await syncSchoolDataFromCloud();
-      } else {
+  if (topSchoolHeading) topSchoolHeading.innerText = profileData.schools.name;
+  if (topSchoolSubheading) topSchoolSubheading.innerText = `${profileData.schools.city} ${profileData.schools.state}`;
+  if (topSchoolDropdownOpt) topSchoolDropdownOpt.innerText = profileData.schools.name;
+  if (currentOperatorName) currentOperatorName.innerText = profileData.full_name;
+  if (currentOperatorRole) currentOperatorRole.innerText = (profileData.role || 'accountant').toUpperCase();
+  if (currentOperatorAvatar) currentOperatorAvatar.innerText = profileData.full_name ? profileData.full_name.split(' ').map(n => n[0]).join('').slice(0, 2) : "AJ";
+  if (slipPreparedBy) slipPreparedBy.innerText = profileData.full_name;
+  if (sidebarStatusText) sidebarStatusText.innerText = "Live Synced";
+
+  // 5. Modal hide karein aur school data load karein
+  document.getElementById('authModal').classList.add('hidden');
+  showToast(`Welcome ${profileData.full_name}! Loaded ${profileData.schools.name}`);
+
+  await syncSchoolDataFromCloud();
+} else {
         document.getElementById('authModal').classList.remove('hidden');
         document.getElementById('sidebarStatusText').innerText = "Profile Incomplete";
       }
