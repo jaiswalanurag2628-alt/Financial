@@ -1038,111 +1038,141 @@
 
     // 1. AUTH CHECK ON LOAD
   // Auth Check on Page Load / After Login
-async function checkAuthSession() {
-  const { data: { session }, error } = await sbClient.auth.getSession();
+// 1. AUTH CHECK ON LOAD (Corrected)
+    async function checkAuthSession() {
+      const { data: { session }, error } = await sbClient.auth.getSession();
 
-  if (!session) {
-    document.getElementById('authModal').classList.remove('hidden');
-    const statusText = document.getElementById('sidebarStatusText');
-    if (statusText) statusText.innerText = "Not Authenticated";
-    return;
-  }
-
-  currentSessionUser = session.user;
-
-  // 1. Pehle database se profile aur school fetch karein
-  const { data: profileData, error: profErr } = await sbClient
-    .from('profiles')
-    .select('*, schools(*)')
-    .eq('id', session.user.id)
-    .maybeSingle();
-
-  if (profErr) {
-    console.error("Profile fetch error:", profErr.message);
-    showToast("Error loading profile: " + profErr.message, true);
-    return;
-  }
-
-  if (!profileData || !profileData.schools) {
-    console.warn("User has logged in, but no profile/school found for UID:", session.user.id);
-    document.getElementById('authModal').classList.remove('hidden');
-    const statusText = document.getElementById('sidebarStatusText');
-    if (statusText) statusText.innerText = "Profile Incomplete";
-    showToast("Account not linked to any school. Please contact Admin.", true);
-    return;
-  }
-
-  // 2. Profile milne ke baad global variables update karein
-  currentProfile = profileData;
-  currentSchoolId = profileData.school_id;
-  CURRENT_USER = profileData.full_name || "Financial Admin";
-
-  // 3. Super Admin Menu Toggle (Master Check)
-  const superAdminNav = document.getElementById('superAdminNavBlock');
-  if (superAdminNav) {
-    if (currentProfile.is_super_admin) {
-      superAdminNav.classList.remove('hidden');
-    } else {
-      superAdminNav.classList.add('hidden');
-    }
-  }
-
-  // 4. UI Headers dynamically update karein
-  const topSchoolHeading = document.getElementById('topSchoolHeading');
-  const topSchoolSubheading = document.getElementById('topSchoolSubheading');
-  const topSchoolDropdownOpt = document.getElementById('topSchoolDropdownOpt');
-  const currentOperatorName = document.getElementById('currentOperatorName');
-  const currentOperatorRole = document.getElementById('currentOperatorRole');
-  const currentOperatorAvatar = document.getElementById('currentOperatorAvatar');
-  const slipPreparedBy = document.getElementById('slipPreparedBy');
-  const sidebarStatusText = document.getElementById('sidebarStatusText');
-
-  if (topSchoolHeading) topSchoolHeading.innerText = profileData.schools.name;
-  if (topSchoolSubheading) topSchoolSubheading.innerText = `${profileData.schools.city} ${profileData.schools.state}`;
-  if (topSchoolDropdownOpt) topSchoolDropdownOpt.innerText = profileData.schools.name;
-  if (currentOperatorName) currentOperatorName.innerText = profileData.full_name;
-  if (currentOperatorRole) currentOperatorRole.innerText = (profileData.role || 'accountant').toUpperCase();
-  if (currentOperatorAvatar) currentOperatorAvatar.innerText = profileData.full_name ? profileData.full_name.split(' ').map(n => n[0]).join('').slice(0, 2) : "AJ";
-  if (slipPreparedBy) slipPreparedBy.innerText = profileData.full_name;
-  if (sidebarStatusText) sidebarStatusText.innerText = "Live Synced";
-
-  // 5. Modal hide karein aur school data load karein
-  document.getElementById('authModal').classList.add('hidden');
-  showToast(`Welcome ${profileData.full_name}! Loaded ${profileData.schools.name}`);
-
-  await syncSchoolDataFromCloud();
-} else {
+      if (!session) {
         document.getElementById('authModal').classList.remove('hidden');
-        document.getElementById('sidebarStatusText').innerText = "Profile Incomplete";
-      }
-    }
-
-    // 2. AUTH LOGIN
-    async function handleAuthLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('authEmailInput').value.trim();
-      const password = document.getElementById('authPasswordInput').value;
-      const btn = document.getElementById('authLoginBtn');
-      const errEl = document.getElementById('authErrorMsg');
-
-      btn.disabled = true;
-      btn.innerText = "Signing in...";
-      errEl.classList.add('hidden');
-
-      const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
-
-      btn.disabled = false;
-      btn.innerText = "Login & Load Accounts";
-
-      if (error) {
-        errEl.innerText = error.message;
-        errEl.classList.remove('hidden');
+        const statusText = document.getElementById('sidebarStatusText');
+        if (statusText) statusText.innerText = "Not Authenticated";
         return;
       }
 
-      await checkAuthSession();
+      currentSessionUser = session.user;
+
+      const { data: profileData, error: profErr } = await sbClient
+        .from('profiles')
+        .select('*, schools(*)')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (profErr) {
+        console.error("Profile fetch error:", profErr.message);
+        showToast("Error loading profile: " + profErr.message, true);
+        return;
+      }
+
+      if (!profileData || !profileData.schools) {
+        console.warn("No profile or school linked for UID:", session.user.id);
+        document.getElementById('authModal').classList.remove('hidden');
+        const statusText = document.getElementById('sidebarStatusText');
+        if (statusText) statusText.innerText = "Profile Incomplete";
+        showToast("Account not linked to any school. Please contact Admin.", true);
+        return;
+      }
+
+      currentProfile = profileData;
+      currentSchoolId = profileData.school_id;
+      CURRENT_USER = profileData.full_name || "Financial Admin";
+
+      // Super admin check
+      const superAdminNav = document.getElementById('superAdminNavBlock');
+      if (superAdminNav) {
+        if (currentProfile.is_super_admin) superAdminNav.classList.remove('hidden');
+        else superAdminNav.classList.add('hidden');
+      }
+
+      // UI updates
+      const topSchoolHeading = document.getElementById('topSchoolHeading');
+      const topSchoolSubheading = document.getElementById('topSchoolSubheading');
+      const topSchoolDropdownOpt = document.getElementById('topSchoolDropdownOpt');
+      const currentOperatorName = document.getElementById('currentOperatorName');
+      const currentOperatorRole = document.getElementById('currentOperatorRole');
+      const currentOperatorAvatar = document.getElementById('currentOperatorAvatar');
+      const slipPreparedBy = document.getElementById('slipPreparedBy');
+      const sidebarStatusText = document.getElementById('sidebarStatusText');
+
+      if (topSchoolHeading) topSchoolHeading.innerText = profileData.schools.name;
+      if (topSchoolSubheading) topSchoolSubheading.innerText = `${profileData.schools.city || ''} ${profileData.schools.state || ''}`;
+      if (topSchoolDropdownOpt) topSchoolDropdownOpt.innerText = profileData.schools.name;
+      if (currentOperatorName) currentOperatorName.innerText = profileData.full_name;
+      if (currentOperatorRole) currentOperatorRole.innerText = (profileData.role || 'accountant').toUpperCase();
+      if (currentOperatorAvatar) currentOperatorAvatar.innerText = profileData.full_name ? profileData.full_name.split(' ').map(n => n[0]).join('').slice(0, 2) : "AJ";
+      if (slipPreparedBy) slipPreparedBy.innerText = profileData.full_name;
+      if (sidebarStatusText) sidebarStatusText.innerText = "Live Synced";
+
+      document.getElementById('authModal').classList.add('hidden');
+      showToast(`Welcome ${profileData.full_name}! Loaded ${profileData.schools.name}`);
+
+      await syncSchoolDataFromCloud();
     }
 
+    // MISSING MASTER MODAL FUNCTIONS
+    function openMasterOnboardingModal() {
+      document.getElementById('masterSchoolModal').classList.remove('hidden');
+    }
+
+    function closeMasterOnboardingModal() {
+      document.getElementById('masterSchoolModal').classList.add('hidden');
+    }
+
+    async function handleMasterSchoolCreation(event) {
+      event.preventDefault();
+      showToast("Provisioning feature pending backend setup.");
+    }
+
+    // MISSING DAY BOOK RENDER FUNCTION
+    function renderDayBookEntries() {
+      const tbody = document.getElementById('dayBookTableContent');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const filterType = document.getElementById('dayBookFilter') ? document.getElementById('dayBookFilter').value : 'ALL';
+      const search = (document.getElementById('dayBookSearchInput') ? document.getElementById('dayBookSearchInput').value : '').toLowerCase();
+
+      const filtered = vouchers.filter(v => {
+        const matchesType = (filterType === 'ALL' || v.type === filterType);
+        const matchesSearch = !search || v.id.toLowerCase().includes(search) || 
+                              v.narration.toLowerCase().includes(search) ||
+                              v.rows.some(r => {
+                                const l = ledgerMap.get(r.ledgerId);
+                                return l && l.name.toLowerCase().includes(search);
+                              });
+        return matchesType && matchesSearch;
+      });
+
+      const frag = document.createDocumentFragment();
+      filtered.forEach(v => {
+        const total = v.rows.reduce((sum, r) => sum + (r.dr || 0), 0);
+        const drLedgers = v.rows.filter(r => r.dr > 0).map(r => (ledgerMap.get(r.ledgerId) || {}).name).join(', ');
+        const crLedgers = v.rows.filter(r => r.cr > 0).map(r => (ledgerMap.get(r.ledgerId) || {}).name).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono">${v.date}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-[#00407a]">${v.id}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800">${v.type}</span></td>
+          <td class="py-2.5 px-3"><div><span class="font-semibold text-gray-800">${escapeHtml(drLedgers || '-')}</span></div><div class="text-[10px] text-gray-400">To: ${escapeHtml(crLedgers || '-')}</div></td>
+          <td class="py-2.5 px-3 text-right font-mono font-semibold">₹${fmt(total)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-semibold">₹${fmt(total)}</td>
+          <td class="py-2.5 px-3 text-gray-600 truncate max-w-xs">${escapeHtml(v.narration || '-')}</td>
+          <td class="py-2.5 px-3 text-center no-print">
+            <button onclick="printVoucherSlip('${v.id}')" class="text-gray-500 hover:text-blue-600 mr-2" title="Print"><i class="fa-solid fa-print"></i></button>
+            <button onclick="editVoucherTransaction('${v.id}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button onclick="deleteVoucherTransaction('${v.id}')" class="text-gray-400 hover:text-red-600" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+          </td>
+        `;
+        frag.appendChild(tr);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400 italic">No vouchers found for selected filters.</td></tr>';
+      } else {
+        tbody.appendChild(frag);
+      }
+    }
     // 3. LOGOUT
     async function handleAuthLogout() {
       if (!confirm("Are you sure you want to log out of this school session?")) return;
