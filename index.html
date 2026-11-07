@@ -29,6 +29,27 @@
     .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     .sidebar-scroll::-webkit-scrollbar { width: 4px; }
     .sidebar-scroll::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printVoucherModal, #printVoucherModal * {
+        visibility: visible;
+      }
+      #printVoucherModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body class="h-screen flex overflow-hidden custom-scroll text-sm">
@@ -55,7 +76,7 @@
         </button>
 
         <div id="finAccountingSubmenu" class="bg-[#002b54] py-1 text-white/80 space-y-0.5">
-          <div class="px-4 pt-2 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Entries & Ledgers</div>
+          <div class="px-4 pt-2 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Entries &amp; Ledgers</div>
           <button id="navLink-add-ledger" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs font-semibold text-white bg-white/15">
             <i class="fa-regular fa-folder-open w-4 mr-2 text-amber-400"></i> Add Ledger
           </button>
@@ -74,7 +95,7 @@
             <i class="fa-solid fa-building-columns w-4 mr-2 text-indigo-300"></i> Cash &amp; Bank Book
           </button>
 
-          <div class="px-4 pt-2.5 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Financial Reports</div>
+          <div class="px-4 pt-2.5 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Financial Reports &amp; Audit</div>
           <button id="navLink-ledger-statement" onclick="navigateTo('ledger-statement', 'Financial Accounting', 'Ledger Statement')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
             <i class="fa-solid fa-file-invoice-dollar w-4 mr-2 text-purple-300"></i> Ledger Statement
           </button>
@@ -87,6 +108,10 @@
           <button id="navLink-balance-sheet" onclick="navigateTo('balance-sheet', 'Financial Accounting', 'Balance Sheet')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
             <i class="fa-solid fa-vault w-4 mr-2 text-amber-400"></i> Balance Sheet
           </button>
+          <!-- Audit Changes Log Link -->
+          <button id="navLink-audit-trail" onclick="navigateTo('audit-trail', 'Financial Accounting', 'Audit Trail (Changes Log)')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-clock-rotate-left w-4 mr-2 text-rose-300"></i> Audit Trail (Log)
+          </button>
         </div>
       </div>
     </div>
@@ -94,12 +119,13 @@
     <div class="bg-[#002b54] p-3 text-[11px] text-blue-200 border-t border-white/10 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>Accrual Engine v4.3</span>
+        <span>Audit Trail Active</span>
       </div>
+      <span class="text-[10px] bg-blue-900 px-1.5 py-0.5 rounded text-white font-mono">v4.5</span>
     </div>
   </aside>
 
-  <!-- MAIN WRAPPER -->
+  <!-- MAIN CONTENT -->
   <div class="flex-grow flex flex-col h-full overflow-hidden bg-white">
     <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 z-30 flex-shrink-0">
       <div class="flex items-center space-x-3">
@@ -136,6 +162,17 @@
           <span>₹</span>
           <span>Today's Collection: <strong id="todayCollectionAmount" class="font-mono">₹45,000</strong></span>
         </button>
+
+        <!-- Current Operating User Display -->
+        <div class="flex items-center space-x-2 border-l pl-3 border-gray-200">
+          <div class="text-right hidden lg:block">
+            <span class="block text-[11px] font-bold text-gray-800 leading-tight">CA Anurag Jaiswal</span>
+            <span class="block text-[9px] text-gray-400">Financial Admin</span>
+          </div>
+          <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 border border-blue-300 flex items-center justify-center text-xs font-bold">
+            AJ
+          </div>
+        </div>
       </div>
     </header>
 
@@ -290,9 +327,18 @@
 
       <!-- MODULE 2: VOUCHER TRANSACTION -->
       <section id="view-voucher-entry" class="space-y-6 hidden">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Voucher Transaction</h2>
-          <p class="text-xs text-gray-500">Double-entry accounting transaction form. Total Dr must equal Total Cr.</p>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 id="vchFormHeading" class="text-xl font-bold text-[#e68a00] mb-1">Voucher Transaction</h2>
+            <p id="vchFormSubtitle" class="text-xs text-gray-500">Double-entry accounting transaction form. Total Dr must equal Total Cr.</p>
+          </div>
+          <div id="vchEditModeBadge" class="hidden flex items-center gap-2 bg-amber-50 border border-amber-300 text-amber-900 px-3 py-1.5 rounded">
+            <i class="fa-solid fa-pen-to-square text-amber-600"></i>
+            <span class="text-xs font-bold">Editing Voucher: <span id="vchEditingId" class="font-mono">VR-000</span></span>
+            <button onclick="cancelVoucherEdit()" class="ml-2 bg-white hover:bg-gray-100 text-gray-700 text-[11px] font-bold px-2 py-0.5 rounded border border-gray-300">
+              Cancel Edit
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-5 shadow-sm space-y-4">
@@ -397,11 +443,13 @@
         </div>
       </section>
 
-      <!-- MODULE 3: DAY BOOK -->
+      <!-- MODULE 3: DAY BOOK (WITH PRINT, EDIT & DELETE) -->
       <section id="view-day-book" class="space-y-6 hidden">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Transaction Report (Day Book)</h2>
-          <p class="text-xs text-gray-500">Chronological register of all daily voucher entries</p>
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Transaction Report (Day Book)</h2>
+            <p class="text-xs text-gray-500">Chronological register of all vouchers with Print Slip, Edit, &amp; Delete options</p>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
@@ -430,6 +478,7 @@
                   <th class="py-2.5 px-3 text-right">Debit (₹)</th>
                   <th class="py-2.5 px-3 text-right">Credit (₹)</th>
                   <th class="py-2.5 px-3">Narration / Ref</th>
+                  <th class="py-2.5 px-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody id="dayBookTableContent" class="divide-y divide-gray-100"></tbody>
@@ -645,12 +694,145 @@
         </div>
       </section>
 
+      <!-- MODULE 9: AUDIT TRAIL / CHANGES LOG -->
+      <section id="view-audit-trail" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Audit Trail (Changes Log)</h2>
+            <p class="text-xs text-gray-500">Chronological history tracking who performed which accounting actions, corrections, and timestamps</p>
+          </div>
+          <button onclick="clearAuditTrail()" class="text-xs text-gray-500 hover:text-red-600 border border-gray-300 rounded px-2.5 py-1 bg-white">
+            <i class="fa-regular fa-trash-can mr-1"></i> Clear Old Logs
+          </button>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <input type="text" id="auditSearchInput" oninput="renderAuditTrailLog()" placeholder="Search by Voucher, User, or Action..." class="text-xs border border-gray-300 rounded px-3 py-1.5 w-72">
+            <span class="text-xs text-gray-500">Total Events Logged: <strong id="auditCount" class="font-mono">0</strong></span>
+          </div>
+
+          <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-3 w-40">Timestamp (Date &amp; Time)</th>
+                  <th class="py-2.5 px-3 w-28 text-center">Action</th>
+                  <th class="py-2.5 px-3 w-32">Voucher / Item</th>
+                  <th class="py-2.5 px-3 w-36">Performed By</th>
+                  <th class="py-2.5 px-3">Description &amp; Financial Impact</th>
+                </tr>
+              </thead>
+              <tbody id="auditTrailTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </main>
 
-    <div class="fixed bottom-4 right-4 z-40">
+    <div class="fixed bottom-4 right-4 z-40 no-print">
       <button onclick="showToast('SchoolMitra System Settings: Academic Session 2026-27 Active.')" class="w-10 h-10 rounded bg-[#009688] hover:bg-[#00796b] text-white shadow-lg flex items-center justify-center transition">
         <i class="fa-solid fa-gear text-base"></i>
       </button>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PRINTABLE VOUCHER SLIP -->
+  <!-- ======================================================== -->
+  <div id="printVoucherModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl border border-gray-300 overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Toolbar -->
+      <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center no-print flex-shrink-0">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-receipt text-[#00407a]"></i>
+          <span class="text-xs font-bold text-gray-800">Print Voucher Transaction Slip</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="window.print()" class="bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-sm">
+            <i class="fa-solid fa-print"></i> Print Slip
+          </button>
+          <button onclick="closePrintVoucherModal()" class="text-gray-500 hover:text-gray-800 p-1 text-base">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Slip Area -->
+      <div id="slipPrintableArea" class="p-6 overflow-y-auto flex-grow bg-white text-gray-900 text-xs">
+        
+        <!-- School Slip Header -->
+        <div class="text-center pb-4 border-b-2 border-gray-800">
+          <h2 class="text-lg font-black tracking-wide text-[#00407a] uppercase">DEMO PUBLIC SCHOOL</h2>
+          <p class="text-[11px] text-gray-600 font-semibold">Varanasi, Uttar Pradesh, India | Affiliation No: 2130000</p>
+          <p class="text-[10px] text-gray-500">Session: 2026-27 | Institutional Financial Voucher</p>
+          <div class="mt-2 inline-block bg-gray-900 text-white font-mono font-bold text-xs uppercase px-3 py-0.5 rounded tracking-wider" id="slipVoucherTypeHeading">
+            RECEIPT VOUCHER
+          </div>
+        </div>
+
+        <!-- Slip Meta Info -->
+        <div class="grid grid-cols-2 gap-4 py-3 border-b border-gray-200 text-[11px]">
+          <div>
+            <p><span class="font-bold text-gray-600">Voucher No:</span> <strong id="slipVchNo" class="font-mono text-sm text-[#00407a]">VR-000</strong></p>
+            <p><span class="font-bold text-gray-600">Payment Mode:</span> <span id="slipPaymentMode" class="font-semibold">-</span></p>
+            <p><span class="font-bold text-gray-600">Cheque / UTR Ref:</span> <span id="slipRefNo" class="font-mono">-</span></p>
+          </div>
+          <div class="text-right">
+            <p><span class="font-bold text-gray-600">Date:</span> <strong id="slipDate" class="font-mono text-xs">2026-11-04</strong></p>
+            <p><span class="font-bold text-gray-600">Status:</span> <span class="text-emerald-700 font-bold">Posted &amp; Verified</span></p>
+            <p><span class="font-bold text-gray-600">Printed On:</span> <span id="slipPrintTime" class="font-mono text-[10px] text-gray-500">-</span></p>
+          </div>
+        </div>
+
+        <!-- Slip Ledger Table -->
+        <div class="py-3">
+          <table class="w-full text-left text-xs border border-gray-300">
+            <thead class="bg-gray-100 border-b border-gray-300 font-bold">
+              <tr>
+                <th class="py-2 px-3 w-16 text-center">Type</th>
+                <th class="py-2 px-3">Ledger Particulars / Group</th>
+                <th class="py-2 px-3 text-right w-28">Debit (₹)</th>
+                <th class="py-2 px-3 text-right w-28">Credit (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="slipRowsContainer" class="divide-y divide-gray-200"></tbody>
+            <tfoot class="bg-gray-50 border-t-2 border-gray-400 font-bold">
+              <tr>
+                <td colspan="2" class="py-2 px-3 text-right uppercase">Total Amount:</td>
+                <td id="slipTotalDebit" class="py-2 px-3 text-right font-mono text-sm text-blue-900">₹0.00</td>
+                <td id="slipTotalCredit" class="py-2 px-3 text-right font-mono text-sm text-blue-900">₹0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Narration Box -->
+        <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-xs mb-8">
+          <span class="font-bold text-gray-700">Narration / Being:</span>
+          <p id="slipNarration" class="italic text-gray-800 mt-0.5">-</p>
+        </div>
+
+        <!-- Signatures Block -->
+        <div class="grid grid-cols-3 gap-6 pt-10 text-center text-xs">
+          <div>
+            <div class="border-t border-gray-500 pt-1 font-semibold text-gray-700">Prepared / Clerk</div>
+            <p class="text-[9px] text-gray-400 font-mono" id="slipPreparedBy">CA Anurag Jaiswal</p>
+          </div>
+          <div>
+            <div class="border-t border-gray-500 pt-1 font-semibold text-gray-700">Accountant / Cashier</div>
+            <p class="text-[9px] text-gray-400">Verified</p>
+          </div>
+          <div>
+            <div class="border-t border-gray-500 pt-1 font-semibold text-gray-700">Principal / Manager</div>
+            <p class="text-[9px] text-gray-400">Authorised Signatory</p>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -661,9 +843,11 @@
 
   <!-- JAVASCRIPT STATE ENGINE -->
   <script>
-    // Cached Single NumberFormatter instance
     const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmt = n => INR.format(n);
+
+    // Current Operator Identity
+    const CURRENT_USER = "CA Anurag Jaiswal";
 
     const INITIAL_LEDGERS = [
       { id: 'L1', name: 'ICICI Bank A/c 0033499', group: 'Bank Accounts', incharge: 'ABC', opBal: 425000, opType: 'Dr' },
@@ -722,12 +906,19 @@
       }
     ];
 
+    const INITIAL_AUDIT_LOGS = [
+      { timestamp: '01-Nov-2026 10:30 AM', action: 'CREATE', item: 'VR-101', user: 'CA Anurag Jaiswal', details: 'Posted Receipt Voucher ₹35,000.00 via UPI (Tuition Fee)' },
+      { timestamp: '02-Nov-2026 02:15 PM', action: 'CREATE', item: 'VR-102', user: 'CA Anurag Jaiswal', details: 'Posted Payment Voucher ₹95,000.00 via Cheque (Staff Salary)' },
+      { timestamp: '03-Nov-2026 11:45 AM', action: 'CREATE', item: 'VR-103', user: 'Accounts Assistant', details: 'Posted Contra Voucher ₹10,000.00 (Cash drawn from ICICI)' },
+      { timestamp: '04-Nov-2026 09:10 AM', action: 'CREATE', item: 'VR-104', user: 'Fee Clerk', details: 'Posted Cash Receipt Voucher ₹10,000.00' }
+    ];
+
     let ledgers = JSON.parse(localStorage.getItem('SM_LEDGERS')) || INITIAL_LEDGERS;
     let subLedgers = JSON.parse(localStorage.getItem('SM_SUBLEDGERS')) || INITIAL_SUBLEDGERS;
     let vouchers = JSON.parse(localStorage.getItem('SM_VOUCHERS')) || INITIAL_VOUCHERS;
+    let auditLogs = JSON.parse(localStorage.getItem('SM_AUDIT_LOGS')) || INITIAL_AUDIT_LOGS;
     let nextVchCounter = vouchers.length + 105;
 
-    // Fast O(1) hash maps
     let ledgerMap = new Map();
     let ledgerOptionsCache = '';
     let currentBalancesMap = {};
@@ -737,6 +928,7 @@
       { ledgerId: '', dr: 0, cr: 0, remark: '' }
     ];
 
+    let editingVoucherId = null;
     let currentSortColumn = 'name';
     let sortAscending = true;
 
@@ -750,6 +942,24 @@
       ledgerOptionsCache = opts;
     }
 
+    // Logger helper
+    function recordAuditLog(action, item, details) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      const logEntry = {
+        timestamp: `${dateStr} ${timeStr}`,
+        action: action.toUpperCase(),
+        item,
+        user: CURRENT_USER,
+        details
+      };
+
+      auditLogs.unshift(logEntry);
+      saveState();
+    }
+
     window.onload = function() {
       buildLedgerIndex();
       renderLedgersTable();
@@ -758,10 +968,15 @@
       setupVoucherDraft();
       calculateMasterBalances();
       renderPassbookData();
+      renderAuditTrailLog();
     };
 
     function navigateTo(viewId, category, pageTitle) {
-      const views = ['add-ledger', 'add-subledger', 'voucher-entry', 'day-book', 'passbook', 'ledger-statement', 'trial-balance', 'income-expenditure', 'balance-sheet'];
+      const views = [
+        'add-ledger', 'add-subledger', 'voucher-entry', 'day-book', 'passbook',
+        'ledger-statement', 'trial-balance', 'income-expenditure', 'balance-sheet', 'audit-trail'
+      ];
+
       views.forEach(v => {
         const el = document.getElementById(`view-${v}`);
         if (el) el.classList.add('hidden');
@@ -789,6 +1004,7 @@
       if (viewId === 'passbook') renderPassbookData();
       if (viewId === 'ledger-statement') renderSelectedLedgerStatement();
       if (viewId === 'add-subledger') renderSubLedgersTable();
+      if (viewId === 'audit-trail') renderAuditTrailLog();
 
       if (window.innerWidth < 768) {
         document.getElementById('mainSidebar').classList.add('-translate-x-full');
@@ -814,146 +1030,120 @@
       setTimeout(() => t.classList.add('translate-y-24'), 3000);
     }
 
-    // ADD LEDGER
-    function handleFormSubmitLedger(e) {
-      e.preventDefault();
-      const group = document.getElementById('inputLedgerGroup').value;
-      const name = document.getElementById('inputLedgerName').value.trim();
-      const incharge = document.getElementById('inputLedgerInCharge').value.trim() || 'ABC';
-      const opBal = parseFloat(document.getElementById('inputLedgerOpBal').value) || 0;
-      const opType = document.getElementById('inputLedgerBalType').value;
+    // ==========================================
+    // MODULE: PRINT VOUCHER SLIP
+    // ==========================================
+    function printVoucherSlip(voucherId) {
+      const vch = vouchers.find(v => v.id === voucherId);
+      if (!vch) return showToast('Voucher not found!', true);
 
-      if (!name || !group) return showToast('Please enter Ledger Name and Group!', true);
-      if (ledgers.some(l => l.name.toLowerCase() === name.toLowerCase())) return showToast('Ledger already exists!', true);
+      document.getElementById('slipVchNo').innerText = vch.id;
+      document.getElementById('slipDate').innerText = vch.date;
+      document.getElementById('slipPaymentMode').innerText = vch.refMode || 'Cash';
+      document.getElementById('slipRefNo').innerText = vch.refNo || 'N/A';
+      document.getElementById('slipNarration').innerText = vch.narration || 'Being financial transaction recorded.';
+      document.getElementById('slipVoucherTypeHeading').innerText = `${vch.type.toUpperCase()} VOUCHER`;
+      document.getElementById('slipPrintTime').innerText = new Date().toLocaleString('en-GB');
 
-      const newLedger = { id: 'L' + (Date.now() % 100000), name, group, incharge, opBal, opType };
-      ledgers.push(newLedger);
-      saveState();
-      buildLedgerIndex();
-      renderLedgersTable();
-      populateDropdownOptions();
-      calculateMasterBalances();
-
-      document.getElementById('ledgerCreationForm').reset();
-      document.getElementById('inputLedgerOpBal').value = '0';
-      showToast(`Ledger "${name}" added successfully!`);
-    }
-
-    function sortLedgers(col) {
-      if (currentSortColumn === col) sortAscending = !sortAscending;
-      else { currentSortColumn = col; sortAscending = true; }
-      renderLedgersTable();
-    }
-
-    function renderLedgersTable() {
-      const tbody = document.getElementById('ledgersTableBody');
-      const search = (document.getElementById('ledgerSearchInput').value || '').toLowerCase();
+      const tbody = document.getElementById('slipRowsContainer');
       tbody.innerHTML = '';
+      let sumDr = 0, sumCr = 0;
 
-      const list = ledgers.filter(l => 
-        l.name.toLowerCase().includes(search) || 
-        l.group.toLowerCase().includes(search) || 
-        l.incharge.toLowerCase().includes(search)
-      ).sort((a, b) => {
-        let valA = a[currentSortColumn] ? a[currentSortColumn].toString().toLowerCase() : '';
-        let valB = b[currentSortColumn] ? b[currentSortColumn].toString().toLowerCase() : '';
-        return (valA < valB ? -1 : 1) * (sortAscending ? 1 : -1);
-      });
+      vch.rows.forEach(r => {
+        const l = ledgerMap.get(r.ledgerId) || { name: 'Account', group: '-' };
+        sumDr += (r.dr || 0);
+        sumCr += (r.cr || 0);
 
-      document.getElementById('ledgerFilteredCount').innerText = list.length;
-      const frag = document.createDocumentFragment();
-
-      list.forEach(l => {
-        const isPnL = ['Direct Income', 'Indirect Income', 'Indirect Expenses'].includes(l.group);
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-amber-50/40 transition-colors";
+        tr.className = "border-b border-gray-100";
         tr.innerHTML = `
-          <td class="py-2.5 px-4 font-semibold text-gray-700">${escapeHtml(l.group)}</td>
-          <td class="py-2.5 px-4 font-bold text-gray-900">${escapeHtml(l.name)}</td>
-          <td class="py-2.5 px-4 text-gray-600">${escapeHtml(l.incharge)}</td>
-          <td class="py-2.5 px-4 text-right font-mono text-gray-800">${l.opBal > 0 ? `₹${fmt(l.opBal)} <span class="font-bold text-[10px] text-gray-500">${l.opType}</span>` : '₹0.00'}</td>
-          <td class="py-2.5 px-4 text-center"><span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">${isPnL ? 'Income & Exp' : 'Balance Sheet'}</span></td>
-          <td class="py-2.5 px-4 text-center">
-            <button onclick="editLedgerAction('${l.id}')" title="Edit" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
-            <button onclick="deleteLedgerAction('${l.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+          <td class="py-2 px-3 text-center font-bold font-mono">
+            <span class="px-1.5 py-0.5 rounded text-[10px] ${r.dr > 0 ? 'bg-blue-50 text-blue-800' : 'bg-amber-50 text-amber-800'}">
+              ${r.dr > 0 ? 'Dr.' : 'To'}
+            </span>
           </td>
+          <td class="py-2 px-3">
+            <span class="font-bold text-gray-800">${escapeHtml(l.name)}</span>
+            <span class="block text-[10px] text-gray-400 font-mono">${escapeHtml(l.group)} ${r.remark ? ' | Note: ' + escapeHtml(r.remark) : ''}</span>
+          </td>
+          <td class="py-2 px-3 text-right font-mono font-semibold">${r.dr > 0 ? '₹' + fmt(r.dr) : '-'}</td>
+          <td class="py-2 px-3 text-right font-mono font-semibold">${r.cr > 0 ? '₹' + fmt(r.cr) : '-'}</td>
         `;
-        frag.appendChild(tr);
+        tbody.appendChild(tr);
       });
-      tbody.appendChild(frag);
+
+      document.getElementById('slipTotalDebit').innerText = `₹${fmt(sumDr)}`;
+      document.getElementById('slipTotalCredit').innerText = `₹${fmt(sumCr)}`;
+
+      document.getElementById('printVoucherModal').classList.remove('hidden');
     }
 
-    function deleteLedgerAction(id) {
-      if (vouchers.some(v => v.rows.some(r => r.ledgerId === id))) return showToast('Cannot delete ledger used in vouchers!', true);
-      ledgers = ledgers.filter(l => l.id !== id);
-      saveState();
-      buildLedgerIndex();
-      renderLedgersTable();
-      populateDropdownOptions();
-      calculateMasterBalances();
-      showToast('Ledger deleted.');
+    function closePrintVoucherModal() {
+      document.getElementById('printVoucherModal').classList.add('hidden');
     }
 
-    function editLedgerAction(id) {
-      const l = ledgerMap.get(id);
-      if (!l) return;
-      document.getElementById('inputLedgerName').value = l.name;
-      document.getElementById('inputLedgerGroup').value = l.group;
-      document.getElementById('inputLedgerInCharge').value = l.incharge;
-      document.getElementById('inputLedgerOpBal').value = l.opBal;
-      document.getElementById('inputLedgerBalType').value = l.opType;
-      showToast(`Loaded ${l.name} for editing.`);
-    }
-
-    // SUBLEDGER
-    function handleFormSubmitSubLedger(e) {
-      e.preventDefault();
-      const parentId = document.getElementById('inputSubParentLedger').value;
-      const name = document.getElementById('inputSubLedgerName').value.trim();
-      const code = document.getElementById('inputSubLedgerCode').value.trim() || `SUB-${subLedgers.length + 101}`;
-
-      if (!parentId || !name) return showToast('Select Parent Ledger and Name!', true);
-
-      subLedgers.push({ id: 'SL' + (Date.now() % 100000), code, name, parentLedgerId: parentId });
-      saveState();
-      renderSubLedgersTable();
-      document.getElementById('subLedgerCreationForm').reset();
-      showToast(`SubLedger "${name}" added!`);
-    }
-
-    function renderSubLedgersTable() {
-      const tbody = document.getElementById('subLedgersTableBody');
+    // ==========================================
+    // MODULE: AUDIT TRAIL LOG VIEWER
+    // ==========================================
+    function renderAuditTrailLog() {
+      const tbody = document.getElementById('auditTrailTableBody');
       if (!tbody) return;
+      const search = (document.getElementById('auditSearchInput').value || '').toLowerCase();
       tbody.innerHTML = '';
+
+      const filtered = auditLogs.filter(log => {
+        if (!search) return true;
+        return log.item.toLowerCase().includes(search) ||
+               log.action.toLowerCase().includes(search) ||
+               log.user.toLowerCase().includes(search) ||
+               log.details.toLowerCase().includes(search);
+      });
+
+      document.getElementById('auditCount').innerText = filtered.length;
       const frag = document.createDocumentFragment();
 
-      subLedgers.forEach(s => {
-        const parent = ledgerMap.get(s.parentLedgerId) || { name: 'Unknown', group: 'N/A' };
+      filtered.forEach(log => {
+        let badgeColor = 'bg-blue-100 text-blue-800';
+        if (log.action === 'CREATE') badgeColor = 'bg-emerald-100 text-emerald-800';
+        if (log.action === 'UPDATE') badgeColor = 'bg-amber-100 text-amber-800';
+        if (log.action === 'DELETE') badgeColor = 'bg-rose-100 text-rose-800';
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 border-b border-gray-100";
         tr.innerHTML = `
-          <td class="py-2.5 px-4 font-mono font-bold text-[#00407a]">${escapeHtml(s.code)}</td>
-          <td class="py-2.5 px-4 font-semibold text-gray-800">${escapeHtml(s.name)}</td>
-          <td class="py-2.5 px-4 text-gray-700">${escapeHtml(parent.name)}</td>
-          <td class="py-2.5 px-4 text-gray-500 font-semibold">${escapeHtml(parent.group)}</td>
-          <td class="py-2.5 px-4 text-center">
-            <button onclick="deleteSubLedger('${s.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+          <td class="py-2.5 px-3 font-mono text-gray-600 whitespace-nowrap">${log.timestamp}</td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeColor}">${log.action}</span>
           </td>
+          <td class="py-2.5 px-3 font-mono font-bold text-[#00407a]">${escapeHtml(log.item)}</td>
+          <td class="py-2.5 px-3 font-semibold text-gray-800">${escapeHtml(log.user)}</td>
+          <td class="py-2.5 px-3 text-gray-600">${escapeHtml(log.details)}</td>
         `;
         frag.appendChild(tr);
       });
-      tbody.appendChild(frag);
+
+      if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-gray-400 italic">No audit records found.</td></tr>';
+      else tbody.appendChild(frag);
     }
 
-    function deleteSubLedger(id) {
-      subLedgers = subLedgers.filter(s => s.id !== id);
+    function clearAuditTrail() {
+      if (!confirm("Are you sure you want to clear older audit records?")) return;
+      auditLogs = [];
       saveState();
-      renderSubLedgersTable();
-      showToast('SubLedger deleted.');
+      renderAuditTrailLog();
+      showToast("Audit logs cleared.");
     }
 
-    // VOUCHER TRANSACTION (HIGH PERFORMANCE)
+    // ==========================================
+    // VOUCHER TRANSACTION HANDLERS
+    // ==========================================
     function setupVoucherDraft() {
+      editingVoucherId = null;
+      document.getElementById('vchFormHeading').innerText = "Voucher Transaction";
+      document.getElementById('vchFormSubtitle').innerText = "Double-entry accounting transaction form. Total Dr must equal Total Cr.";
+      document.getElementById('vchEditModeBadge').classList.add('hidden');
+      document.getElementById('btnSaveVoucherSubmit').innerText = "Save Voucher Transaction";
+
       document.getElementById('vchNumberInput').value = `VR-${nextVchCounter++}`;
       document.getElementById('vchDateInput').value = '2026-11-04';
       document.getElementById('vchInstrumentNo').value = '';
@@ -964,6 +1154,68 @@
         { ledgerId: '', dr: 0, cr: 0, remark: '' }
       ];
       renderVoucherRowsDraft();
+    }
+
+    function editVoucherTransaction(voucherId) {
+      const vch = vouchers.find(v => v.id === voucherId);
+      if (!vch) return showToast('Voucher not found!', true);
+
+      editingVoucherId = vch.id;
+      navigateTo('voucher-entry', 'Financial Accounting', 'Voucher Transaction (Edit)');
+
+      document.getElementById('vchFormHeading').innerText = "Edit Voucher Transaction";
+      document.getElementById('vchFormSubtitle').innerText = "Make necessary corrections and click 'Update Voucher Transaction'.";
+      document.getElementById('vchEditingId').innerText = vch.id;
+      document.getElementById('vchEditModeBadge').classList.remove('hidden');
+      document.getElementById('btnSaveVoucherSubmit').innerText = "Update Voucher Transaction";
+
+      document.getElementById('vchNumberInput').value = vch.id;
+      document.getElementById('vchDateInput').value = vch.date;
+      document.getElementById('vchTypeSelect').value = vch.type;
+      document.getElementById('vchPaymentMode').value = vch.refMode || 'Cash';
+      document.getElementById('vchInstrumentNo').value = vch.refNo || '';
+      document.getElementById('vchMainNarration').value = vch.narration || '';
+
+      voucherDraftRows = vch.rows.map(r => ({
+        ledgerId: r.ledgerId,
+        dr: r.dr || 0,
+        cr: r.cr || 0,
+        remark: r.remark || ''
+      }));
+
+      renderVoucherRowsDraft();
+      showToast(`Loaded ${vch.id} for correction.`);
+    }
+
+    function cancelVoucherEdit() {
+      setupVoucherDraft();
+      showToast('Edit mode canceled. Reset to new voucher.');
+    }
+
+    function deleteVoucherTransaction(voucherId) {
+      if (!confirm(`Are you sure you want to delete/cancel voucher ${voucherId}? This action will be logged in the audit trail.`)) {
+        return;
+      }
+
+      const vch = vouchers.find(v => v.id === voucherId);
+      const totalAmount = vch ? vch.rows.reduce((s, r) => s + r.dr, 0) : 0;
+
+      vouchers = vouchers.filter(v => v.id !== voucherId);
+      saveState();
+
+      // Log the deletion with financial impact
+      recordAuditLog('DELETE', voucherId, `Deleted ${vch ? vch.type : ''} voucher totaling ₹${fmt(totalAmount)} (Reversed in accounts)`);
+
+      if (editingVoucherId === voucherId) {
+        setupVoucherDraft();
+      }
+
+      calculateMasterBalances();
+      renderDayBookEntries();
+      renderPassbookData();
+      renderSelectedLedgerStatement();
+
+      showToast(`Voucher ${voucherId} deleted and logged in Audit Trail.`);
     }
 
     function onVoucherTypeChange() {
@@ -1056,7 +1308,6 @@
       validateVoucherCalculations();
     }
 
-    // Selective DOM update for input rows without destroying input focus
     function updateRowAmt(idx, type, val) {
       const num = parseFloat(val) || 0;
       const row = voucherDraftRows[idx];
@@ -1130,10 +1381,11 @@
 
     function submitVoucherEntry() {
       const vchNo = document.getElementById('vchNumberInput').value;
-      const newVch = {
+      const vchType = document.getElementById('vchTypeSelect').value;
+      const vchPayload = {
         id: vchNo,
         date: document.getElementById('vchDateInput').value,
-        type: document.getElementById('vchTypeSelect').value,
+        type: vchType,
         refMode: document.getElementById('vchPaymentMode').value,
         refNo: document.getElementById('vchInstrumentNo').value.trim() || 'N/A',
         narration: document.getElementById('vchMainNarration').value.trim() || 'Voucher transaction',
@@ -1145,18 +1397,33 @@
         }))
       };
 
-      vouchers.unshift(newVch);
-      saveState();
+      const totalAmount = vchPayload.rows.reduce((s, r) => s + r.dr, 0);
 
-      showToast(`Voucher ${vchNo} posted!`);
+      if (editingVoucherId) {
+        const index = vouchers.findIndex(v => v.id === editingVoucherId);
+        if (index !== -1) {
+          vouchers[index] = vchPayload;
+          recordAuditLog('UPDATE', vchNo, `Updated ${vchType} Voucher totaling ₹${fmt(totalAmount)} (${vchPayload.narration})`);
+          showToast(`Voucher ${vchNo} updated successfully!`);
+        }
+      } else {
+        vouchers.unshift(vchPayload);
+        recordAuditLog('CREATE', vchNo, `Created new ${vchType} Voucher totaling ₹${fmt(totalAmount)} via ${vchPayload.refMode}`);
+        showToast(`Voucher ${vchNo} posted!`);
+      }
+
+      saveState();
       setupVoucherDraft();
       calculateMasterBalances();
       renderDayBookEntries();
       renderPassbookData();
       renderSelectedLedgerStatement();
+      renderAuditTrailLog();
     }
 
-    // DAY BOOK
+    // ==========================================
+    // DAY BOOK WITH PRINT, EDIT & DELETE ACTIONS
+    // ==========================================
     function renderDayBookEntries() {
       const tbody = document.getElementById('dayBookTableContent');
       const filter = document.getElementById('dayBookFilter').value;
@@ -1199,11 +1466,22 @@
             <div>${escapeHtml(v.narration)}</div>
             <div class="text-[10px] text-gray-400">Ref: ${v.refMode} (${v.refNo})</div>
           </td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <button onclick="printVoucherSlip('${v.id}')" title="Print Voucher Slip" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded px-2 py-1 text-xs font-bold mr-1.5 transition">
+              <i class="fa-solid fa-print mr-1"></i> Slip
+            </button>
+            <button onclick="editVoucherTransaction('${v.id}')" title="Edit / Correct Voucher" class="text-blue-600 hover:text-blue-800 p-1 mr-1 transition">
+              <i class="fa-regular fa-pen-to-square text-sm"></i>
+            </button>
+            <button onclick="deleteVoucherTransaction('${v.id}')" title="Delete / Cancel Voucher" class="text-gray-400 hover:text-red-600 p-1 transition">
+              <i class="fa-regular fa-trash-can text-sm"></i>
+            </button>
+          </td>
         `;
         frag.appendChild(tr);
       });
 
-      if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400 italic">No vouchers found.</td></tr>';
+      if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400 italic">No vouchers found.</td></tr>';
       else tbody.appendChild(frag);
     }
 
@@ -1214,7 +1492,150 @@
       return 'bg-blue-100 text-blue-800 border border-blue-300';
     }
 
-    // PASSBOOK
+    // ==========================================
+    // LEDGER & PASSBOOK REGISTERS
+    // ==========================================
+    function handleFormSubmitLedger(e) {
+      e.preventDefault();
+      const group = document.getElementById('inputLedgerGroup').value;
+      const name = document.getElementById('inputLedgerName').value.trim();
+      const incharge = document.getElementById('inputLedgerInCharge').value.trim() || 'ABC';
+      const opBal = parseFloat(document.getElementById('inputLedgerOpBal').value) || 0;
+      const opType = document.getElementById('inputLedgerBalType').value;
+
+      if (!name || !group) return showToast('Please enter Ledger Name and Group!', true);
+      if (ledgers.some(l => l.name.toLowerCase() === name.toLowerCase())) return showToast('Ledger already exists!', true);
+
+      const newLedger = { id: 'L' + (Date.now() % 100000), name, group, incharge, opBal, opType };
+      ledgers.push(newLedger);
+      saveState();
+      buildLedgerIndex();
+      renderLedgersTable();
+      populateDropdownOptions();
+      calculateMasterBalances();
+
+      recordAuditLog('CREATE', newLedger.id, `Created Ledger Account "${name}" under Group "${group}" (Op. Bal ₹${fmt(opBal)} ${opType})`);
+
+      document.getElementById('ledgerCreationForm').reset();
+      document.getElementById('inputLedgerOpBal').value = '0';
+      showToast(`Ledger "${name}" added successfully!`);
+    }
+
+    function sortLedgers(col) {
+      if (currentSortColumn === col) sortAscending = !sortAscending;
+      else { currentSortColumn = col; sortAscending = true; }
+      renderLedgersTable();
+    }
+
+    function renderLedgersTable() {
+      const tbody = document.getElementById('ledgersTableBody');
+      const search = (document.getElementById('ledgerSearchInput').value || '').toLowerCase();
+      tbody.innerHTML = '';
+
+      const list = ledgers.filter(l => 
+        l.name.toLowerCase().includes(search) || 
+        l.group.toLowerCase().includes(search) || 
+        l.incharge.toLowerCase().includes(search)
+      ).sort((a, b) => {
+        let valA = a[currentSortColumn] ? a[currentSortColumn].toString().toLowerCase() : '';
+        let valB = b[currentSortColumn] ? b[currentSortColumn].toString().toLowerCase() : '';
+        return (valA < valB ? -1 : 1) * (sortAscending ? 1 : -1);
+      });
+
+      document.getElementById('ledgerFilteredCount').innerText = list.length;
+      const frag = document.createDocumentFragment();
+
+      list.forEach(l => {
+        const isPnL = ['Direct Income', 'Indirect Income', 'Indirect Expenses'].includes(l.group);
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-amber-50/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-semibold text-gray-700">${escapeHtml(l.group)}</td>
+          <td class="py-2.5 px-4 font-bold text-gray-900">${escapeHtml(l.name)}</td>
+          <td class="py-2.5 px-4 text-gray-600">${escapeHtml(l.incharge)}</td>
+          <td class="py-2.5 px-4 text-right font-mono text-gray-800">${l.opBal > 0 ? `₹${fmt(l.opBal)} <span class="font-bold text-[10px] text-gray-500">${l.opType}</span>` : '₹0.00'}</td>
+          <td class="py-2.5 px-4 text-center"><span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">${isPnL ? 'Income & Exp' : 'Balance Sheet'}</span></td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="editLedgerAction('${l.id}')" title="Edit" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button onclick="deleteLedgerAction('${l.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+          </td>
+        `;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }
+
+    function deleteLedgerAction(id) {
+      if (vouchers.some(v => v.rows.some(r => r.ledgerId === id))) return showToast('Cannot delete ledger used in vouchers!', true);
+      const l = ledgerMap.get(id);
+      ledgers = ledgers.filter(l => l.id !== id);
+      saveState();
+      buildLedgerIndex();
+      renderLedgersTable();
+      populateDropdownOptions();
+      calculateMasterBalances();
+
+      if (l) recordAuditLog('DELETE', l.id, `Deleted Ledger Account "${l.name}"`);
+      showToast('Ledger deleted.');
+    }
+
+    function editLedgerAction(id) {
+      const l = ledgerMap.get(id);
+      if (!l) return;
+      document.getElementById('inputLedgerName').value = l.name;
+      document.getElementById('inputLedgerGroup').value = l.group;
+      document.getElementById('inputLedgerInCharge').value = l.incharge;
+      document.getElementById('inputLedgerOpBal').value = l.opBal;
+      document.getElementById('inputLedgerBalType').value = l.opType;
+      showToast(`Loaded ${l.name} for editing.`);
+    }
+
+    function handleFormSubmitSubLedger(e) {
+      e.preventDefault();
+      const parentId = document.getElementById('inputSubParentLedger').value;
+      const name = document.getElementById('inputSubLedgerName').value.trim();
+      const code = document.getElementById('inputSubLedgerCode').value.trim() || `SUB-${subLedgers.length + 101}`;
+
+      if (!parentId || !name) return showToast('Select Parent Ledger and Name!', true);
+
+      subLedgers.push({ id: 'SL' + (Date.now() % 100000), code, name, parentLedgerId: parentId });
+      saveState();
+      renderSubLedgersTable();
+      document.getElementById('subLedgerCreationForm').reset();
+      showToast(`SubLedger "${name}" added!`);
+    }
+
+    function renderSubLedgersTable() {
+      const tbody = document.getElementById('subLedgersTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const frag = document.createDocumentFragment();
+
+      subLedgers.forEach(s => {
+        const parent = ledgerMap.get(s.parentLedgerId) || { name: 'Unknown', group: 'N/A' };
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 border-b border-gray-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 font-mono font-bold text-[#00407a]">${escapeHtml(s.code)}</td>
+          <td class="py-2.5 px-4 font-semibold text-gray-800">${escapeHtml(s.name)}</td>
+          <td class="py-2.5 px-4 text-gray-700">${escapeHtml(parent.name)}</td>
+          <td class="py-2.5 px-4 text-gray-500 font-semibold">${escapeHtml(parent.group)}</td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="deleteSubLedger('${s.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
+          </td>
+        `;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }
+
+    function deleteSubLedger(id) {
+      subLedgers = subLedgers.filter(s => s.id !== id);
+      saveState();
+      renderSubLedgersTable();
+      showToast('SubLedger deleted.');
+    }
+
     function renderPassbookData() {
       const select = document.getElementById('passbookAccountSelect');
       const ledger = ledgerMap.get(select.value || 'L1');
@@ -1228,7 +1649,6 @@
       let totalIn = 0;
       const frag = document.createDocumentFragment();
 
-      // Op Row
       const trOp = document.createElement('tr');
       trOp.className = "bg-gray-50 italic font-semibold text-gray-600";
       trOp.innerHTML = `
@@ -1274,7 +1694,6 @@
       document.getElementById('passbookClosingBal').innerText = `₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}`;
     }
 
-    // LEDGER STATEMENT
     function renderSelectedLedgerStatement() {
       const select = document.getElementById('ledgerSelectStatement');
       const ledger = ledgerMap.get(select.value || 'L4');
@@ -1333,7 +1752,7 @@
       document.getElementById('stmtClosingBal').innerText = `₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}`;
     }
 
-    // ACCRUAL LEDGER ENGINE COMPUTATION
+    // ACCRUAL REPORT ENGINE
     function calculateMasterBalances() {
       currentBalancesMap = {};
       ledgers.forEach(l => {
@@ -1484,6 +1903,7 @@
         localStorage.setItem('SM_LEDGERS', JSON.stringify(ledgers));
         localStorage.setItem('SM_SUBLEDGERS', JSON.stringify(subLedgers));
         localStorage.setItem('SM_VOUCHERS', JSON.stringify(vouchers));
+        localStorage.setItem('SM_AUDIT_LOGS', JSON.stringify(auditLogs));
       } catch (err) { console.warn(err); }
     }
 
