@@ -70,6 +70,53 @@
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
+    <!-- SIDEBAR: Only visible if is_super_admin is true -->
+<div id="superAdminNavBlock" class="hidden px-4 py-2 border-t border-white/10">
+  <button onclick="openMasterOnboardingModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-3 py-2 rounded text-xs flex items-center justify-center gap-1.5 shadow">
+    <i class="fa-solid fa-shield-halved"></i> Master: Add School
+  </button>
+</div>
+
+<!-- MASTER ONBOARDING MODAL (FOR YOU ONLY) -->
+<div id="masterSchoolModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-md border border-gray-300 overflow-hidden">
+    <div class="bg-gray-900 px-5 py-3 text-white flex justify-between items-center">
+      <span class="text-xs font-bold uppercase tracking-wider text-amber-400">
+        <i class="fa-solid fa-crown mr-1"></i> Master School Provisioning
+      </span>
+      <button onclick="closeMasterOnboardingModal()" class="text-gray-400 hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form onsubmit="handleMasterSchoolCreation(event)" class="p-5 space-y-3 text-xs">
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">Client School Name</label>
+        <input type="text" id="mSchoolName" required placeholder="e.g. Varanasi City Convent" class="w-full border border-gray-300 rounded px-3 py-1.5 outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">City</label>
+        <input type="text" id="mSchoolCity" value="Varanasi" class="w-full border border-gray-300 rounded px-3 py-1.5 outline-none">
+      </div>
+      <div class="border-t pt-2">
+        <label class="block font-bold text-gray-700 mb-1">Assigned Accountant Name</label>
+        <input type="text" id="mAccountantName" required placeholder="Accountant Full Name" class="w-full border border-gray-300 rounded px-3 py-1.5 outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">Accountant Login Email</label>
+        <input type="email" id="mAccountantEmail" required placeholder="accountant@clientdomain.com" class="w-full border border-gray-300 rounded px-3 py-1.5 outline-none">
+      </div>
+      <div>
+        <label class="block font-bold text-gray-700 mb-1">Initial Password</label>
+        <input type="text" id="mAccountantPassword" value="School@123" required class="w-full border border-gray-300 rounded px-3 py-1.5 font-mono outline-none">
+      </div>
+
+      <button type="submit" id="btnMasterSubmit" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold py-2 rounded shadow transition mt-2">
+        Provision School &amp; Generate Credentials
+      </button>
+    </form>
+  </div>
+</div>
 
     <div class="flex-grow overflow-y-auto sidebar-scroll py-2 text-xs font-normal">
       <div class="bg-[#003362]/60 border-b border-white/5">
@@ -992,6 +1039,54 @@
     // 1. AUTH CHECK ON LOAD
     async function checkAuthSession() {
       const { data: { session }, error } = await sbClient.auth.getSession();
+
+      if (profile.is_super_admin) {
+  document.getElementById('superAdminNavBlock').classList.remove('hidden');
+} else {
+  document.getElementById('superAdminNavBlock').classList.add('hidden');
+}
+
+function openMasterOnboardingModal() {
+  document.getElementById('masterSchoolModal').classList.remove('hidden');
+}
+
+function closeMasterOnboardingModal() {
+  document.getElementById('masterSchoolModal').classList.add('hidden');
+}
+
+async function handleMasterSchoolCreation(e) {
+  e.preventDefault();
+  const schoolName = document.getElementById('mSchoolName').value.trim();
+  const city = document.getElementById('mSchoolCity').value.trim();
+  const accountantName = document.getElementById('mAccountantName').value.trim();
+  const email = document.getElementById('mAccountantEmail').value.trim();
+  const password = document.getElementById('mAccountantPassword').value;
+
+  const btn = document.getElementById('btnMasterSubmit');
+  btn.disabled = true;
+  btn.innerText = "Provisioning...";
+
+  // 1. Call Master RPC function (Secured by RLS)
+  const { data: rpcRes, error: rpcErr } = await sbClient.rpc('master_create_school_account', {
+    p_school_name: schoolName,
+    p_school_city: city,
+    p_operator_name: accountantName,
+    p_user_email: email,
+    p_user_password: password
+  });
+
+  if (rpcErr) {
+    btn.disabled = false;
+    btn.innerText = "Provision School & Generate Credentials";
+    return alert("Failed: " + rpcErr.message);
+  }
+
+  // 2. School ready hone ke baad user details alert karein
+  alert(`School "${schoolName}" created successfully!\n\nProvide these login credentials to the school:\nEmail: ${email}\nPassword: ${password}`);
+  closeMasterOnboardingModal();
+  btn.disabled = false;
+  btn.innerText = "Provision School & Generate Credentials";
+}
 
       if (!session) {
         document.getElementById('authModal').classList.remove('hidden');
