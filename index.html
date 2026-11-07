@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  // Exact Supabase Credentials
-const SUPABASE_URL = "https://srewazpfpwmmooaitdyv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_q9IMaTaNz3KODiPgjEUhkg_d4eDWA99";
-
-// Initialize Supabase Client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SCHOOLMITRA - Financial Accounting & School ERP</title>
+  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Supabase Official JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -123,12 +121,15 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       </div>
     </div>
 
+    <!-- User Signout & School Session Status -->
     <div class="bg-[#002b54] p-3 text-[11px] text-blue-200 border-t border-white/10 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>Audit Trail Active</span>
+        <span id="sidebarStatusText">Cloud Connected</span>
       </div>
-      <span class="text-[10px] bg-blue-900 px-1.5 py-0.5 rounded text-white font-mono">v4.6</span>
+      <button onclick="handleAuthLogout()" title="Logout" class="text-white/70 hover:text-red-400 transition font-bold">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
     </div>
   </aside>
 
@@ -149,7 +150,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         <div class="hidden md:flex flex-col">
           <label class="text-[10px] text-gray-500 font-medium -mb-1">Select School</label>
           <select class="bg-white border border-gray-300 text-xs font-semibold rounded px-2.5 py-1 text-gray-700 outline-none w-44">
-            <option selected>DEMO PUBLIC SCHOOL</option>
+            <option id="topSchoolDropdownOpt" selected>DEMO PUBLIC SCHOOL</option>
           </select>
         </div>
       </div>
@@ -160,22 +161,22 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             logo
           </div>
           <div class="text-left">
-            <h1 class="text-sm font-black text-[#00407a] leading-tight tracking-wide">DEMO PUBLIC SCHOOL</h1>
-            <p class="text-[10px] text-gray-500 font-semibold">Varanasi Uttar Pradesh</p>
+            <h1 id="topSchoolHeading" class="text-sm font-black text-[#00407a] leading-tight tracking-wide">DEMO PUBLIC SCHOOL</h1>
+            <p id="topSchoolSubheading" class="text-[10px] text-gray-500 font-semibold">Varanasi Uttar Pradesh</p>
           </div>
         </div>
 
         <button onclick="showTodaySummaryModal()" class="bg-[#198754] hover:bg-[#157347] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center space-x-1 transition cursor-pointer">
           <span>₹</span>
-          <span>Today's Collection: <strong id="todayCollectionAmount" class="font-mono">₹45,000</strong></span>
+          <span>Today's Collection: <strong id="todayCollectionAmount" class="font-mono">₹0.00</strong></span>
         </button>
 
         <div class="flex items-center space-x-2 border-l pl-3 border-gray-200">
           <div class="text-right hidden lg:block">
-            <span class="block text-[11px] font-bold text-gray-800 leading-tight">CA Anurag Jaiswal</span>
-            <span class="block text-[9px] text-gray-400">Financial Admin</span>
+            <span id="currentOperatorName" class="block text-[11px] font-bold text-gray-800 leading-tight">CA Anurag Jaiswal</span>
+            <span id="currentOperatorRole" class="block text-[9px] text-gray-400">Financial Admin</span>
           </div>
-          <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 border border-blue-300 flex items-center justify-center text-xs font-bold">
+          <div id="currentOperatorAvatar" class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 border border-blue-300 flex items-center justify-center text-xs font-bold">
             AJ
           </div>
         </div>
@@ -258,7 +259,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             </div>
 
             <div class="md:col-span-2">
-              <button type="submit" class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 px-4 rounded shadow-sm transition">
+              <button type="submit" id="btnSubmitLedger" class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 px-4 rounded shadow-sm transition">
                 Click To Add
               </button>
             </div>
@@ -907,86 +908,68 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </div>
   </div>
 
+  <!-- AUTHENTICATION LOGIN MODAL -->
+  <div id="authModal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md border border-gray-300 overflow-hidden">
+      <div class="bg-[#003362] px-6 py-4 text-center border-b border-blue-900/50">
+        <div class="text-xl font-extrabold tracking-wider">
+          <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
+        </div>
+        <p class="text-xs text-blue-200 mt-1 font-medium">Financial Accounting System</p>
+      </div>
+
+      <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="p-6 space-y-4">
+        <h3 class="text-base font-bold text-gray-800 text-center">Sign in to your School</h3>
+        
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Email Address</label>
+          <input type="email" id="authEmailInput" required placeholder="accountant@school.com"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+          <input type="password" id="authPasswordInput" required placeholder="••••••••"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
+        </div>
+
+        <button type="submit" id="authLoginBtn"
+          class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 rounded shadow transition">
+          Login &amp; Load Accounts
+        </button>
+
+        <p id="authErrorMsg" class="text-xs text-red-600 text-center font-medium hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
   <div id="appToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2.5 rounded-md shadow-2xl text-xs flex items-center space-x-2 transform translate-y-24 transition-all duration-300 z-50 no-print">
     <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
     <span id="toastMsg">Operation successful!</span>
   </div>
 
-  <!-- JAVASCRIPT STATE ENGINE & EXPORT UTILITIES -->
+  <!-- JAVASCRIPT STATE ENGINE & SUPABASE CLOUD SYNC -->
   <script>
     const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmt = n => INR.format(n);
-    const CURRENT_USER = "CA Anurag Jaiswal";
 
-    const INITIAL_LEDGERS = [
-      { id: 'L1', name: 'ICICI Bank A/c 0033499', group: 'Bank Accounts', incharge: 'ABC', opBal: 425000, opType: 'Dr' },
-      { id: 'L2', name: 'Cash In Hand', group: 'Cash-in-Hand', incharge: 'CASH IN HAND', opBal: 18500, opType: 'Dr' },
-      { id: 'L3', name: 'Tuition Fee Income', group: 'Direct Income', incharge: 'ABC', opBal: 0, opType: 'Cr' },
-      { id: 'L4', name: 'Staff Salary & Remuneration', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
-      { id: 'L5', name: 'Staff Benefits & Allowances', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
-      { id: 'L6', name: 'Administrative & Office Operations', group: 'Indirect Expenses', incharge: 'CASH IN HAND', opBal: 0, opType: 'Dr' },
-      { id: 'L7', name: 'ERP Expenses', group: 'Indirect Expenses', incharge: 'ABC', opBal: 0, opType: 'Dr' },
-      { id: 'L8', name: 'Fees Receivable (Students Due)', group: 'Current Assets', incharge: 'Accounts Office', opBal: 85000, opType: 'Dr' },
-      { id: 'L9', name: 'Advance Fees (Received in Advance)', group: 'Current Liabilities', incharge: 'Accounts Office', opBal: 35000, opType: 'Cr' },
-      { id: 'L10', name: 'M/s Sharma Stationery & Supplies', group: 'Current Liabilities', incharge: 'Store Keeper', opBal: 12000, opType: 'Cr' },
-      { id: 'L11', name: 'School Furniture & Lab Equipment', group: 'Fixed Assets', incharge: 'Lab Assistant', opBal: 350000, opType: 'Dr' },
-      { id: 'L12', name: 'Corpus & Trust General Fund', group: 'Corpus / Capital Fund', incharge: 'Management', opBal: 831500, opType: 'Cr' }
-    ];
+    // Exact Supabase Client Initialization
+    const SUPABASE_URL = "https://srewazpfpwmmooaitdyv.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_q9IMaTaNz3KODiPgjEUhkg_d4eDWA99";
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const INITIAL_SUBLEDGERS = [
-      { id: 'SL1', code: 'SUB-101', name: 'Class 9 Tuition Fee', parentLedgerId: 'L3' },
-      { id: 'SL2', code: 'SUB-102', name: 'Class 10 Tuition Fee', parentLedgerId: 'L3' },
-      { id: 'SL3', code: 'SUB-103', name: 'Primary Teachers Salary', parentLedgerId: 'L4' },
-      { id: 'SL4', code: 'SUB-104', name: 'Secondary Teachers Salary', parentLedgerId: 'L4' }
-    ];
+    // Dynamic Multi-Tenant Context
+    let currentSessionUser = null;
+    let currentSchoolId = null;
+    let currentProfile = null;
+    let CURRENT_USER = "Financial Admin";
 
-    const INITIAL_VOUCHERS = [
-      {
-        id: 'VR-101', date: '2026-11-01', type: 'Receipt', refMode: 'UPI / Online', refNo: 'UPI/983427382/Tuition',
-        narration: 'Tuition fees received via online portal for Q3',
-        rows: [
-          { ledgerId: 'L1', dr: 35000, cr: 0, remark: 'ICICI Bank credited' },
-          { ledgerId: 'L3', dr: 0, cr: 35000, remark: 'Tuition Fee collection' }
-        ]
-      },
-      {
-        id: 'VR-102', date: '2026-11-02', type: 'Payment', refMode: 'Cheque', refNo: 'CHQ-88201',
-        narration: 'Staff salaries paid through bank transfer for October',
-        rows: [
-          { ledgerId: 'L4', dr: 95000, cr: 0, remark: 'Teacher and staff salary' },
-          { ledgerId: 'L1', dr: 0, cr: 95000, remark: 'Paid via ICICI Bank' }
-        ]
-      },
-      {
-        id: 'VR-103', date: '2026-11-03', type: 'Contra', refMode: 'Cash', refNo: 'SLIP-4410',
-        narration: 'Cash drawn from ICICI Bank for petty cash requirements',
-        rows: [
-          { ledgerId: 'L2', dr: 10000, cr: 0, remark: 'Cash in Hand increased' },
-          { ledgerId: 'L1', dr: 0, cr: 10000, remark: 'Withdrawn from ICICI Bank' }
-        ]
-      },
-      {
-        id: 'VR-104', date: '2026-11-04', type: 'Receipt', refMode: 'Cash', refNo: 'RCPT-501',
-        narration: 'Cash tuition fee collected at fee counter today',
-        rows: [
-          { ledgerId: 'L2', dr: 10000, cr: 0, remark: 'Cash collected' },
-          { ledgerId: 'L3', dr: 0, cr: 10000, remark: 'Tuition fees' }
-        ]
-      }
-    ];
-
-    const INITIAL_AUDIT_LOGS = [
-      { timestamp: '01-Nov-2026 10:30 AM', action: 'CREATE', item: 'VR-101', user: 'CA Anurag Jaiswal', details: 'Posted Receipt Voucher ₹35,000.00 via UPI (Tuition Fee)' },
-      { timestamp: '02-Nov-2026 02:15 PM', action: 'CREATE', item: 'VR-102', user: 'CA Anurag Jaiswal', details: 'Posted Payment Voucher ₹95,000.00 via Cheque (Staff Salary)' },
-      { timestamp: '03-Nov-2026 11:45 AM', action: 'CREATE', item: 'VR-103', user: 'Accounts Assistant', details: 'Posted Contra Voucher ₹10,000.00 (Cash drawn from ICICI)' },
-      { timestamp: '04-Nov-2026 09:10 AM', action: 'CREATE', item: 'VR-104', user: 'Fee Clerk', details: 'Posted Cash Receipt Voucher ₹10,000.00' }
-    ];
-
-    let ledgers = JSON.parse(localStorage.getItem('SM_LEDGERS')) || INITIAL_LEDGERS;
-    let subLedgers = JSON.parse(localStorage.getItem('SM_SUBLEDGERS')) || INITIAL_SUBLEDGERS;
-    let vouchers = JSON.parse(localStorage.getItem('SM_VOUCHERS')) || INITIAL_VOUCHERS;
-    let auditLogs = JSON.parse(localStorage.getItem('SM_AUDIT_LOGS')) || INITIAL_AUDIT_LOGS;
-    let nextVchCounter = vouchers.length + 105;
+    let ledgers = [];
+    let subLedgers = [];
+    let vouchers = [];
+    let auditLogs = [];
+    let nextVchCounter = 101;
 
     let ledgerMap = new Map();
     let ledgerOptionsCache = '';
@@ -1000,6 +983,135 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let editingVoucherId = null;
     let currentSortColumn = 'name';
     let sortAscending = true;
+
+    // INIT
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuthSession();
+    });
+
+    // 1. AUTH CHECK ON LOAD
+    async function checkAuthSession() {
+      const { data: { session }, error } = await sbClient.auth.getSession();
+
+      if (!session) {
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('sidebarStatusText').innerText = "Not Authenticated";
+        return;
+      }
+
+      currentSessionUser = session.user;
+
+      const { data: profile, error: profErr } = await sbClient
+        .from('profiles')
+        .select('*, schools(*)')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile && profile.schools) {
+        currentProfile = profile;
+        currentSchoolId = profile.school_id;
+        CURRENT_USER = profile.full_name || "Financial Admin";
+
+        // Update Dynamic UI Headers
+        document.getElementById('topSchoolHeading').innerText = profile.schools.name;
+        document.getElementById('topSchoolSubheading').innerText = `${profile.schools.city} ${profile.schools.state}`;
+        document.getElementById('topSchoolDropdownOpt').innerText = profile.schools.name;
+        document.getElementById('currentOperatorName').innerText = profile.full_name;
+        document.getElementById('currentOperatorRole').innerText = profile.role ? profile.role.toUpperCase() : "ACCOUNTANT";
+        document.getElementById('currentOperatorAvatar').innerText = profile.full_name ? profile.full_name.split(' ').map(n=>n[0]).join('').slice(0, 2) : "AJ";
+        document.getElementById('slipPreparedBy').innerText = profile.full_name;
+        document.getElementById('sidebarStatusText').innerText = "Live Synced";
+
+        document.getElementById('authModal').classList.add('hidden');
+        showToast(`Welcome ${profile.full_name}! Loaded ${profile.schools.name}`);
+
+        await syncSchoolDataFromCloud();
+      } else {
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('sidebarStatusText').innerText = "Profile Incomplete";
+      }
+    }
+
+    // 2. AUTH LOGIN
+    async function handleAuthLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const password = document.getElementById('authPasswordInput').value;
+      const btn = document.getElementById('authLoginBtn');
+      const errEl = document.getElementById('authErrorMsg');
+
+      btn.disabled = true;
+      btn.innerText = "Signing in...";
+      errEl.classList.add('hidden');
+
+      const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+
+      btn.disabled = false;
+      btn.innerText = "Login & Load Accounts";
+
+      if (error) {
+        errEl.innerText = error.message;
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      await checkAuthSession();
+    }
+
+    // 3. LOGOUT
+    async function handleAuthLogout() {
+      if (!confirm("Are you sure you want to log out of this school session?")) return;
+      await sbClient.auth.signOut();
+      window.location.reload();
+    }
+
+    // 4. CLOUD SYNC
+    async function syncSchoolDataFromCloud() {
+      showToast("Fetching school accounts from cloud...");
+
+      const { data: cloudLedgers, error: lErr } = await sbClient
+        .from('ledgers')
+        .select('*');
+
+      const { data: cloudVouchers, error: vErr } = await sbClient
+        .from('vouchers')
+        .select('*')
+        .order('voucher_date', { ascending: false });
+
+      if (cloudLedgers) {
+        ledgers = cloudLedgers.map(l => ({
+          id: l.id,
+          name: l.name,
+          group: l.account_group,
+          incharge: l.incharge || 'ABC',
+          opBal: parseFloat(l.op_bal) || 0,
+          opType: l.op_type || 'Dr'
+        }));
+      }
+
+      if (cloudVouchers) {
+        vouchers = cloudVouchers.map(v => ({
+          id: v.voucher_no,
+          dbId: v.id,
+          date: v.voucher_date,
+          type: v.voucher_type,
+          refMode: v.ref_mode || 'Cash',
+          refNo: v.ref_no || '',
+          narration: v.narration || '',
+          rows: Array.isArray(v.rows) ? v.rows : []
+        }));
+        nextVchCounter = vouchers.length + 101;
+      }
+
+      buildLedgerIndex();
+      calculateMasterBalances();
+      renderLedgersTable();
+      renderDayBookEntries();
+      renderPassbookData();
+      renderSelectedLedgerStatement();
+      populateDropdownOptions();
+      setupVoucherDraft();
+    }
 
     function buildLedgerIndex() {
       ledgerMap.clear();
@@ -1025,19 +1137,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       };
 
       auditLogs.unshift(logEntry);
-      saveState();
-    }
-
-    window.onload = function() {
-      buildLedgerIndex();
-      renderLedgersTable();
-      renderSubLedgersTable();
-      populateDropdownOptions();
-      setupVoucherDraft();
-      calculateMasterBalances();
-      renderPassbookData();
       renderAuditTrailLog();
-    };
+    }
 
     function navigateTo(viewId, category, pageTitle) {
       const views = [
@@ -1098,9 +1199,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       setTimeout(() => t.classList.add('translate-y-24'), 3000);
     }
 
-    // ========================================================
-    // GLOBAL EXPORT UTILITIES (PDF & EXCEL .XLSX COMPATIBLE)
-    // ========================================================
+    // EXPORT UTILITIES
     function downloadCsvFile(filename, csvContent) {
       const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
@@ -1110,7 +1209,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast(`Exported ${filename}.csv successfully!`);
+      showToast(`Exported ${filename}.csv`);
     }
 
     function exportPageToPdf(elementId, title) {
@@ -1118,11 +1217,14 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       if (!target) return;
 
       const printWin = window.open('', '_blank', 'width=900,height=700');
+      const schoolName = currentProfile && currentProfile.schools ? currentProfile.schools.name : 'DEMO PUBLIC SCHOOL';
+      const schoolLocation = currentProfile && currentProfile.schools ? `${currentProfile.schools.city}, ${currentProfile.schools.state}` : 'Varanasi, Uttar Pradesh';
+
       printWin.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>${title} - DEMO PUBLIC SCHOOL</title>
+          <title>${title} - ${schoolName}</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; font-size: 11px; }
             h1 { margin: 0; font-size: 16px; color: #00407a; text-transform: uppercase; }
@@ -1138,45 +1240,9 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
           </style>
         </head>
         <body>
-        <!-- LOGIN MODAL (SCHOOL-WISE AUTH) -->
-<div id="authModal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-lg shadow-2xl w-full max-w-md border border-gray-300 overflow-hidden">
-    <!-- Header -->
-    <div class="bg-[#003362] px-6 py-4 text-center border-b border-blue-900/50">
-      <div class="text-xl font-extrabold tracking-wider">
-        <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
-      </div>
-      <p class="text-xs text-blue-200 mt-1 font-medium">Financial Accounting System</p>
-    </div>
-
-    <!-- Login Form -->
-    <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="p-6 space-y-4">
-      <h3 class="text-base font-bold text-gray-800 text-center">Sign in to your School</h3>
-      
-      <div>
-        <label class="block text-xs font-bold text-gray-700 mb-1">Email Address</label>
-        <input type="email" id="authEmailInput" required placeholder="accountant@school.com"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
-        <input type="password" id="authPasswordInput" required placeholder="••••••••"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
-      </div>
-
-      <button type="submit" id="authLoginBtn"
-        class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 rounded shadow transition">
-        Login &amp; Load Accounts
-      </button>
-
-      <p id="authErrorMsg" class="text-xs text-red-600 text-center font-medium hidden"></p>
-    </form>
-  </div>
-</div>
           <div class="header">
-            <h1>DEMO PUBLIC SCHOOL, VARANASI</h1>
-            <h2>${title.replace(/_/g, ' ')} | Academic Session: 2026-27</h2>
+            <h1>${schoolName}</h1>
+            <h2>${schoolLocation} | ${title.replace(/_/g, ' ')} | Session: 2026-27</h2>
             <div style="font-size:10px; color:#64748b;">Printed on: ${new Date().toLocaleString('en-GB')} | Generated by: ${CURRENT_USER}</div>
           </div>
           <div>${target.outerHTML}</div>
@@ -1193,7 +1259,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       printWin.document.close();
     }
 
-    // Dedicated Excel CSV Exporters for Every Single Page
     function exportLedgersToExcel() {
       let csv = "Account Group,Ledger Name,In-Charge,Opening Balance,Balance Type\n";
       ledgers.forEach(l => {
@@ -1364,9 +1429,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       downloadCsvFile("Audit_Trail_Changes_Log", csv);
     }
 
-    // ==========================================
-    // MODULE: PRINT VOUCHER SLIP
-    // ==========================================
+    // PRINT VOUCHER SLIP
     function printVoucherSlip(voucherId) {
       const vch = vouchers.find(v => v.id === voucherId);
       if (!vch) return showToast('Voucher not found!', true);
@@ -1416,7 +1479,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       document.getElementById('printVoucherModal').classList.add('hidden');
     }
 
-    // AUDIT LOG VIEWER
+    // AUDIT LOG
     function renderAuditTrailLog() {
       const tbody = document.getElementById('auditTrailTableBody');
       if (!tbody) return;
@@ -1461,12 +1524,11 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     function clearAuditTrail() {
       if (!confirm("Are you sure you want to clear older audit records?")) return;
       auditLogs = [];
-      saveState();
       renderAuditTrailLog();
       showToast("Audit logs cleared.");
     }
 
-    // VOUCHER TRANSACTION HANDLERS
+    // VOUCHER TRANSACTION HANDLERS (SUPABASE CLOUD INTEGRATED)
     function setupVoucherDraft() {
       editingVoucherId = null;
       document.getElementById('vchFormHeading').innerText = "Voucher Transaction";
@@ -1474,8 +1536,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       document.getElementById('vchEditModeBadge').classList.add('hidden');
       document.getElementById('btnSaveVoucherSubmit').innerText = "Save Voucher Transaction";
 
-      document.getElementById('vchNumberInput').value = `VR-${nextVchCounter++}`;
-      document.getElementById('vchDateInput').value = '2026-11-04';
+      document.getElementById('vchNumberInput').value = `VR-${nextVchCounter}`;
+      document.getElementById('vchDateInput').value = new Date().toISOString().slice(0, 10);
       document.getElementById('vchInstrumentNo').value = '';
       document.getElementById('vchMainNarration').value = '';
 
@@ -1522,16 +1584,19 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       showToast('Edit mode canceled. Reset to new voucher.');
     }
 
-    function deleteVoucherTransaction(voucherId) {
-      if (!confirm(`Are you sure you want to delete/cancel voucher ${voucherId}? This action will be logged in the audit trail.`)) {
+    async function deleteVoucherTransaction(voucherId) {
+      if (!confirm(`Are you sure you want to delete/cancel voucher ${voucherId}? This action will reverse cloud balances and be recorded in the audit trail.`)) {
         return;
       }
 
       const vch = vouchers.find(v => v.id === voucherId);
       const totalAmount = vch ? vch.rows.reduce((s, r) => s + r.dr, 0) : 0;
 
-      vouchers = vouchers.filter(v => v.id !== voucherId);
-      saveState();
+      // Delete from Supabase
+      if (vch && vch.dbId) {
+        const { error } = await sbClient.from('vouchers').delete().eq('id', vch.dbId);
+        if (error) return showToast("Cloud Delete Failed: " + error.message, true);
+      }
 
       recordAuditLog('DELETE', voucherId, `Deleted ${vch ? vch.type : ''} voucher totaling ₹${fmt(totalAmount)} (Reversed in accounts)`);
 
@@ -1539,12 +1604,8 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         setupVoucherDraft();
       }
 
-      calculateMasterBalances();
-      renderDayBookEntries();
-      renderPassbookData();
-      renderSelectedLedgerStatement();
-
-      showToast(`Voucher ${voucherId} deleted and logged in Audit Trail.`);
+      await syncSchoolDataFromCloud();
+      showToast(`Voucher ${voucherId} deleted and updated in cloud.`);
     }
 
     function onVoucherTypeChange() {
@@ -1708,120 +1769,69 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
     }
 
-    function submitVoucherEntry() {
+    async function submitVoucherEntry() {
+      if (!currentSchoolId) return showToast("No active school session! Please login.", true);
+
       const vchNo = document.getElementById('vchNumberInput').value;
       const vchType = document.getElementById('vchTypeSelect').value;
-      const vchPayload = {
-        id: vchNo,
-        date: document.getElementById('vchDateInput').value,
-        type: vchType,
-        refMode: document.getElementById('vchPaymentMode').value,
-        refNo: document.getElementById('vchInstrumentNo').value.trim() || 'N/A',
+      const totalAmount = voucherDraftRows.reduce((s, r) => s + (parseFloat(r.dr) || 0), 0);
+
+      const payload = {
+        school_id: currentSchoolId,
+        voucher_no: vchNo,
+        voucher_date: document.getElementById('vchDateInput').value,
+        voucher_type: vchType,
+        ref_mode: document.getElementById('vchPaymentMode').value,
+        ref_no: document.getElementById('vchInstrumentNo').value.trim() || 'N/A',
         narration: document.getElementById('vchMainNarration').value.trim() || 'Voucher transaction',
         rows: voucherDraftRows.map(r => ({
           ledgerId: r.ledgerId,
           dr: parseFloat(r.dr) || 0,
           cr: parseFloat(r.cr) || 0,
           remark: r.remark || ''
-        }))
+        })),
+        created_by: CURRENT_USER
       };
 
-      const totalAmount = vchPayload.rows.reduce((s, r) => s + r.dr, 0);
+      const btn = document.getElementById('btnSaveVoucherSubmit');
+      btn.disabled = true;
+      btn.innerText = "Saving to Cloud...";
 
       if (editingVoucherId) {
-        const index = vouchers.findIndex(v => v.id === editingVoucherId);
-        if (index !== -1) {
-          vouchers[index] = vchPayload;
-          recordAuditLog('UPDATE', vchNo, `Updated ${vchType} Voucher totaling ₹${fmt(totalAmount)} (${vchPayload.narration})`);
-          showToast(`Voucher ${vchNo} updated successfully!`);
+        const existing = vouchers.find(v => v.id === editingVoucherId);
+        if (existing && existing.dbId) {
+          const { error } = await sbClient
+            .from('vouchers')
+            .update(payload)
+            .eq('id', existing.dbId);
+
+          if (error) {
+            btn.disabled = false;
+            btn.innerText = "Update Voucher Transaction";
+            return showToast("Update Failed: " + error.message, true);
+          }
+          recordAuditLog('UPDATE', vchNo, `Updated ${vchType} Voucher totaling ₹${fmt(totalAmount)}`);
+          showToast(`Voucher ${vchNo} updated in cloud!`);
         }
       } else {
-        vouchers.unshift(vchPayload);
-        recordAuditLog('CREATE', vchNo, `Created new ${vchType} Voucher totaling ₹${fmt(totalAmount)} via ${vchPayload.refMode}`);
-        showToast(`Voucher ${vchNo} posted!`);
+        const { error } = await sbClient.from('vouchers').insert([payload]);
+        if (error) {
+          btn.disabled = false;
+          btn.innerText = "Save Voucher Transaction";
+          return showToast("Save Failed: " + error.message, true);
+        }
+        recordAuditLog('CREATE', vchNo, `Posted new ${vchType} Voucher totaling ₹${fmt(totalAmount)} via ${payload.ref_mode}`);
+        showToast(`Voucher ${vchNo} synced to cloud!`);
       }
 
-      saveState();
-      setupVoucherDraft();
-      calculateMasterBalances();
-      renderDayBookEntries();
-      renderPassbookData();
-      renderSelectedLedgerStatement();
-      renderAuditTrailLog();
+      await syncSchoolDataFromCloud();
     }
 
-    // DAY BOOK RENDER
-    function renderDayBookEntries() {
-      const tbody = document.getElementById('dayBookTableContent');
-      const filter = document.getElementById('dayBookFilter').value;
-      const query = (document.getElementById('dayBookSearchInput').value || '').toLowerCase();
-      tbody.innerHTML = '';
-
-      const filtered = vouchers.filter(v => {
-        if (filter !== 'ALL' && v.type !== filter) return false;
-        if (!query) return true;
-        return v.id.toLowerCase().includes(query) || 
-               v.narration.toLowerCase().includes(query) || 
-               v.rows.some(r => {
-                 const l = ledgerMap.get(r.ledgerId);
-                 return l && l.name.toLowerCase().includes(query);
-               });
-      });
-
-      const frag = document.createDocumentFragment();
-      filtered.forEach(v => {
-        const total = v.rows.reduce((sum, r) => sum + r.dr, 0);
-        let splitHtml = '<div class="space-y-0.5 font-mono">';
-        v.rows.forEach(r => {
-          const l = ledgerMap.get(r.ledgerId) || { name: 'Unknown' };
-          splitHtml += r.dr > 0 
-            ? `<div><span class="text-blue-700 font-bold">Dr.</span> ${escapeHtml(l.name)}</div>`
-            : `<div class="pl-4"><span class="text-amber-700 font-bold">To</span> ${escapeHtml(l.name)}</div>`;
-        });
-        splitHtml += '</div>';
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b border-gray-100";
-        tr.innerHTML = `
-          <td class="py-2.5 px-3 text-gray-600">${v.date}</td>
-          <td class="py-2.5 px-3 font-mono font-bold text-[#00407a]">${v.id}</td>
-          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${getVchBadge(v.type)}">${v.type}</span></td>
-          <td class="py-2.5 px-3">${splitHtml}</td>
-          <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">₹${fmt(total)}</td>
-          <td class="py-2.5 px-3 text-right font-mono font-bold text-gray-800">₹${fmt(total)}</td>
-          <td class="py-2.5 px-3 text-gray-500 text-[11px]">
-            <div>${escapeHtml(v.narration)}</div>
-            <div class="text-[10px] text-gray-400">Ref: ${v.refMode} (${v.refNo})</div>
-          </td>
-          <td class="py-2.5 px-3 text-center whitespace-nowrap no-print">
-            <button onclick="printVoucherSlip('${v.id}')" title="Print Voucher Slip" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded px-2 py-1 text-xs font-bold mr-1.5 transition">
-              <i class="fa-solid fa-print mr-1"></i> Slip
-            </button>
-            <button onclick="editVoucherTransaction('${v.id}')" title="Edit / Correct Voucher" class="text-blue-600 hover:text-blue-800 p-1 mr-1 transition">
-              <i class="fa-regular fa-pen-to-square text-sm"></i>
-            </button>
-            <button onclick="deleteVoucherTransaction('${v.id}')" title="Delete / Cancel Voucher" class="text-gray-400 hover:text-red-600 p-1 transition">
-              <i class="fa-regular fa-trash-can text-sm"></i>
-            </button>
-          </td>
-        `;
-        frag.appendChild(tr);
-      });
-
-      if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400 italic">No vouchers found.</td></tr>';
-      else tbody.appendChild(frag);
-    }
-
-    function getVchBadge(type) {
-      if (type === 'Receipt') return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
-      if (type === 'Payment') return 'bg-rose-100 text-rose-800 border border-rose-300';
-      if (type === 'Contra') return 'bg-purple-100 text-purple-800 border border-purple-300';
-      return 'bg-blue-100 text-blue-800 border border-blue-300';
-    }
-
-    // LEDGER MASTER ACTIONS
-    function handleFormSubmitLedger(e) {
+    // CLOUD ADD LEDGER
+    async function handleFormSubmitLedger(e) {
       e.preventDefault();
+      if (!currentSchoolId) return showToast("No active school session! Please login.", true);
+
       const group = document.getElementById('inputLedgerGroup').value;
       const name = document.getElementById('inputLedgerName').value.trim();
       const incharge = document.getElementById('inputLedgerInCharge').value.trim() || 'ABC';
@@ -1831,19 +1841,30 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       if (!name || !group) return showToast('Please enter Ledger Name and Group!', true);
       if (ledgers.some(l => l.name.toLowerCase() === name.toLowerCase())) return showToast('Ledger already exists!', true);
 
-      const newLedger = { id: 'L' + (Date.now() % 100000), name, group, incharge, opBal, opType };
-      ledgers.push(newLedger);
-      saveState();
-      buildLedgerIndex();
-      renderLedgersTable();
-      populateDropdownOptions();
-      calculateMasterBalances();
+      const btn = document.getElementById('btnSubmitLedger');
+      btn.disabled = true;
+      btn.innerText = "Adding...";
 
-      recordAuditLog('CREATE', newLedger.id, `Created Ledger Account "${name}" under Group "${group}" (Op. Bal ₹${fmt(opBal)} ${opType})`);
+      const { data, error } = await sbClient.from('ledgers').insert([{
+        school_id: currentSchoolId,
+        name,
+        account_group: group,
+        incharge,
+        op_bal: opBal,
+        op_type: opType
+      }]).select().single();
 
+      btn.disabled = false;
+      btn.innerText = "Click To Add";
+
+      if (error) return showToast("Failed to save: " + error.message, true);
+
+      recordAuditLog('CREATE', data.id, `Created Ledger "${name}" under Group "${group}" (Op. Bal ₹${fmt(opBal)} ${opType})`);
       document.getElementById('ledgerCreationForm').reset();
       document.getElementById('inputLedgerOpBal').value = '0';
-      showToast(`Ledger "${name}" added successfully!`);
+      showToast(`Ledger "${name}" synced to cloud!`);
+
+      await syncSchoolDataFromCloud();
     }
 
     function sortLedgers(col) {
@@ -1890,18 +1911,16 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       tbody.appendChild(frag);
     }
 
-    function deleteLedgerAction(id) {
+    async function deleteLedgerAction(id) {
       if (vouchers.some(v => v.rows.some(r => r.ledgerId === id))) return showToast('Cannot delete ledger used in vouchers!', true);
       const l = ledgerMap.get(id);
-      ledgers = ledgers.filter(l => l.id !== id);
-      saveState();
-      buildLedgerIndex();
-      renderLedgersTable();
-      populateDropdownOptions();
-      calculateMasterBalances();
+
+      const { error } = await sbClient.from('ledgers').delete().eq('id', id);
+      if (error) return showToast("Cloud Delete Failed: " + error.message, true);
 
       if (l) recordAuditLog('DELETE', l.id, `Deleted Ledger Account "${l.name}"`);
-      showToast('Ledger deleted.');
+      showToast('Ledger deleted from cloud.');
+      await syncSchoolDataFromCloud();
     }
 
     function editLedgerAction(id) {
@@ -1915,7 +1934,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       showToast(`Loaded ${l.name} for editing.`);
     }
 
-    // SUBLEDGER ACTIONS
+    // SUBLEDGERS
     function handleFormSubmitSubLedger(e) {
       e.preventDefault();
       const parentId = document.getElementById('inputSubParentLedger').value;
@@ -1925,7 +1944,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       if (!parentId || !name) return showToast('Select Parent Ledger and Name!', true);
 
       subLedgers.push({ id: 'SL' + (Date.now() % 100000), code, name, parentLedgerId: parentId });
-      saveState();
       renderSubLedgersTable();
       document.getElementById('subLedgerCreationForm').reset();
       showToast(`SubLedger "${name}" added!`);
@@ -1957,7 +1975,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function deleteSubLedger(id) {
       subLedgers = subLedgers.filter(s => s.id !== id);
-      saveState();
       renderSubLedgersTable();
       showToast('SubLedger deleted.');
     }
@@ -1965,7 +1982,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // REGISTERS RENDERING
     function renderPassbookData() {
       const select = document.getElementById('passbookAccountSelect');
-      const ledger = ledgerMap.get(select.value || 'L1');
+      const ledger = ledgerMap.get(select.value || (ledgers[0] ? ledgers[0].id : ''));
       if (!ledger) return;
 
       document.getElementById('passbookOpBal').innerText = `₹${fmt(ledger.opBal)} ${ledger.opType}`;
@@ -2023,7 +2040,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function renderSelectedLedgerStatement() {
       const select = document.getElementById('ledgerSelectStatement');
-      const ledger = ledgerMap.get(select.value || 'L4');
+      const ledger = ledgerMap.get(select.value || (ledgers[0] ? ledgers[0].id : ''));
       if (!ledger) return;
 
       document.getElementById('stmtLedgerName').innerText = ledger.name;
@@ -2079,7 +2096,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       document.getElementById('stmtClosingBal').innerText = `₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}`;
     }
 
-    // ACCRUAL REPORT ENGINE
+    // AUDIT & FINANCIAL BALANCE ENGINE
     function calculateMasterBalances() {
       currentBalancesMap = {};
       ledgers.forEach(l => {
@@ -2087,8 +2104,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       });
 
       let todaySum = 0;
+      const todayIso = new Date().toISOString().slice(0, 10);
+
       vouchers.forEach(v => {
-        const isToday = (v.date === '2026-11-04' && v.type === 'Receipt');
+        const isToday = (v.date === todayIso && v.type === 'Receipt');
         v.rows.forEach(r => {
           if (currentBalancesMap[r.ledgerId] !== undefined) {
             currentBalancesMap[r.ledgerId] += (r.dr - r.cr);
@@ -2220,18 +2239,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
     function showTodaySummaryModal() {
-      const todayVouchers = vouchers.filter(v => v.date === '2026-11-04' && v.type === 'Receipt');
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const todayVouchers = vouchers.filter(v => v.date === todayIso && v.type === 'Receipt');
       const todaySum = todayVouchers.reduce((acc, v) => acc + v.rows.reduce((s, r) => s + r.dr, 0), 0);
       showToast(`Today's Collection: ₹${fmt(todaySum)} across ${todayVouchers.length} vouchers.`);
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem('SM_LEDGERS', JSON.stringify(ledgers));
-        localStorage.setItem('SM_SUBLEDGERS', JSON.stringify(subLedgers));
-        localStorage.setItem('SM_VOUCHERS', JSON.stringify(vouchers));
-        localStorage.setItem('SM_AUDIT_LOGS', JSON.stringify(auditLogs));
-      } catch (err) { console.warn(err); }
     }
 
     function escapeHtml(str) {
