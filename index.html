@@ -32,10 +32,10 @@
 
     @media print {
       body * {
-        visibility: hidden;
+        visibility: hidden !important;
       }
       #printVoucherModal, #printVoucherModal * {
-        visibility: visible;
+        visibility: visible !important;
       }
       #printVoucherModal {
         position: absolute;
@@ -55,7 +55,7 @@
 <body class="h-screen flex overflow-hidden custom-scroll text-sm">
 
   <!-- LEFT SIDEBAR -->
-  <aside id="mainSidebar" class="w-64 bg-[#00407a] text-white flex-shrink-0 flex flex-col transition-all duration-300 z-50 shadow-lg">
+  <aside id="mainSidebar" class="w-64 bg-[#00407a] text-white flex-shrink-0 flex flex-col transition-all duration-300 z-50 shadow-lg no-print">
     <div class="h-14 bg-[#003362] px-4 flex items-center justify-between border-b border-blue-900/50">
       <div class="flex items-center space-x-1 tracking-wider text-xl font-extrabold cursor-pointer" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')">
         <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
@@ -108,7 +108,6 @@
           <button id="navLink-balance-sheet" onclick="navigateTo('balance-sheet', 'Financial Accounting', 'Balance Sheet')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
             <i class="fa-solid fa-vault w-4 mr-2 text-amber-400"></i> Balance Sheet
           </button>
-          <!-- Audit Changes Log Link -->
           <button id="navLink-audit-trail" onclick="navigateTo('audit-trail', 'Financial Accounting', 'Audit Trail (Changes Log)')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
             <i class="fa-solid fa-clock-rotate-left w-4 mr-2 text-rose-300"></i> Audit Trail (Log)
           </button>
@@ -121,13 +120,13 @@
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span>Audit Trail Active</span>
       </div>
-      <span class="text-[10px] bg-blue-900 px-1.5 py-0.5 rounded text-white font-mono">v4.5</span>
+      <span class="text-[10px] bg-blue-900 px-1.5 py-0.5 rounded text-white font-mono">v4.6</span>
     </div>
   </aside>
 
   <!-- MAIN CONTENT -->
   <div class="flex-grow flex flex-col h-full overflow-hidden bg-white">
-    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 z-30 flex-shrink-0">
+    <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 no-print">
       <div class="flex items-center space-x-3">
         <button onclick="toggleSidebarCollapse()" class="text-gray-500 hover:text-gray-700 p-1.5 rounded">
           <i class="fa-solid fa-bars text-base"></i>
@@ -163,7 +162,6 @@
           <span>Today's Collection: <strong id="todayCollectionAmount" class="font-mono">₹45,000</strong></span>
         </button>
 
-        <!-- Current Operating User Display -->
         <div class="flex items-center space-x-2 border-l pl-3 border-gray-200">
           <div class="text-right hidden lg:block">
             <span class="block text-[11px] font-bold text-gray-800 leading-tight">CA Anurag Jaiswal</span>
@@ -176,7 +174,7 @@
       </div>
     </header>
 
-    <div class="bg-gray-100 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600 flex-shrink-0">
+    <div class="bg-gray-100 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600 flex-shrink-0 no-print">
       <div class="flex items-center space-x-2 font-medium">
         <span id="breadcrumbCategory" class="text-gray-700 font-semibold">Financial Accounting</span>
         <span class="text-gray-400">&gt;</span>
@@ -194,8 +192,16 @@
       
       <!-- MODULE 1: ADD LEDGER -->
       <section id="view-add-ledger" class="space-y-6">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-3">Add Ledger</h2>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-[#e68a00]">Add Ledger</h2>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('ledgersTable', 'Ledger_Master_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportLedgersToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-5 shadow-sm">
@@ -258,7 +264,7 @@
               <input type="text" id="ledgerSearchInput" oninput="renderLedgersTable()" placeholder="Search Here" class="w-full sm:w-80 border border-gray-300 rounded px-3 py-1.5 text-xs outline-none" />
             </div>
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs">
+              <table id="ledgersTable" class="w-full text-left text-xs">
                 <thead class="bg-white text-blue-900 border-b border-gray-200">
                   <tr class="font-bold">
                     <th class="py-3 px-4 text-[#0062a3] cursor-pointer" onclick="sortLedgers('group')">Account Group <i class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
@@ -266,7 +272,7 @@
                     <th class="py-3 px-4 text-[#0062a3] cursor-pointer" onclick="sortLedgers('incharge')">In-Charge</th>
                     <th class="py-3 px-4 text-right text-[#0062a3]">Opening Bal (₹)</th>
                     <th class="py-3 px-4 text-center text-[#0062a3]">Category</th>
-                    <th class="py-3 px-4 text-center text-[#0062a3]">Action</th>
+                    <th class="py-3 px-4 text-center text-[#0062a3] no-print">Action</th>
                   </tr>
                 </thead>
                 <tbody id="ledgersTableBody" class="divide-y divide-gray-100 text-gray-800"></tbody>
@@ -281,9 +287,19 @@
 
       <!-- MODULE 1B: ADD SUBLEDGER -->
       <section id="view-add-subledger" class="space-y-6 hidden">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Add SubLedger</h2>
-          <p class="text-xs text-gray-500">Create secondary ledger accounts mapped under a primary parent ledger.</p>
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Add SubLedger</h2>
+            <p class="text-xs text-gray-500">Create secondary ledger accounts mapped under a primary parent ledger.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('subLedgersTable', 'SubLedger_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportSubLedgersToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-5 shadow-sm">
@@ -309,14 +325,14 @@
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
           <h3 class="text-base font-bold text-gray-800">Existing SubLedgers</h3>
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="subLedgersTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-4">Code</th>
                   <th class="py-2.5 px-4">SubLedger Name</th>
                   <th class="py-2.5 px-4">Parent Ledger Account</th>
                   <th class="py-2.5 px-4">Account Group</th>
-                  <th class="py-2.5 px-4 text-center">Action</th>
+                  <th class="py-2.5 px-4 text-center no-print">Action</th>
                 </tr>
               </thead>
               <tbody id="subLedgersTableBody" class="divide-y divide-gray-100"></tbody>
@@ -443,12 +459,20 @@
         </div>
       </section>
 
-      <!-- MODULE 3: DAY BOOK (WITH PRINT, EDIT & DELETE) -->
+      <!-- MODULE 3: DAY BOOK -->
       <section id="view-day-book" class="space-y-6 hidden">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Transaction Report (Day Book)</h2>
             <p class="text-xs text-gray-500">Chronological register of all vouchers with Print Slip, Edit, &amp; Delete options</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('dayBookTable', 'Day_Book_Transaction_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportDayBookToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
           </div>
         </div>
 
@@ -468,7 +492,7 @@
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded">
-            <table class="w-full text-left text-xs">
+            <table id="dayBookTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-3">Date</th>
@@ -478,7 +502,7 @@
                   <th class="py-2.5 px-3 text-right">Debit (₹)</th>
                   <th class="py-2.5 px-3 text-right">Credit (₹)</th>
                   <th class="py-2.5 px-3">Narration / Ref</th>
-                  <th class="py-2.5 px-3 text-center">Actions</th>
+                  <th class="py-2.5 px-3 text-center no-print">Actions</th>
                 </tr>
               </thead>
               <tbody id="dayBookTableContent" class="divide-y divide-gray-100"></tbody>
@@ -489,9 +513,19 @@
 
       <!-- MODULE 4: PASSBOOK -->
       <section id="view-passbook" class="space-y-6 hidden">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Passbook Register</h2>
-          <p class="text-xs text-gray-500">Cash and Bank running registers</p>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Passbook Register</h2>
+            <p class="text-xs text-gray-500">Cash and Bank running registers</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('passbookTable', 'Cash_Bank_Passbook_Statement')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportPassbookToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
@@ -516,7 +550,7 @@
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded">
-            <table class="w-full text-left text-xs">
+            <table id="passbookTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-3">Date</th>
@@ -535,9 +569,19 @@
 
       <!-- MODULE 5: LEDGER STATEMENT -->
       <section id="view-ledger-statement" class="space-y-6 hidden">
-        <div>
-          <h2 class="text-xl font-bold text-[#e68a00] mb-1">Ledger Statement</h2>
-          <p class="text-xs text-gray-500">Individual ledger detailed audit statement</p>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00] mb-1">Ledger Statement</h2>
+            <p class="text-xs text-gray-500">Individual ledger detailed audit statement</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('ledgerStatementTable', 'Ledger_Account_Statement')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportLedgerStatementToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-4">
@@ -566,7 +610,7 @@
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded">
-            <table class="w-full text-left text-xs">
+            <table id="ledgerStatementTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-3">Date</th>
@@ -585,19 +629,27 @@
 
       <!-- MODULE 6: TRIAL BALANCE -->
       <section id="view-trial-balance" class="space-y-6 hidden">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Trial Balance</h2>
-            <p class="text-xs text-gray-500">Mathematical balance verification</p>
+            <p class="text-xs text-gray-500">Mathematical balance verification as on 04-Nov-2026</p>
           </div>
-          <div id="trialBalBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-            <i class="fa-solid fa-circle-check mr-1"></i> Books Balanced
+          <div class="flex items-center space-x-2">
+            <div id="trialBalBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <i class="fa-solid fa-circle-check mr-1"></i> Books Balanced
+            </div>
+            <button onclick="exportPageToPdf('trialBalanceTable', 'Trial_Balance_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportTrialBalanceToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
           </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="trialBalanceTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-4">S.No.</th>
@@ -622,15 +674,23 @@
 
       <!-- MODULE 7: INCOME & EXPENDITURE -->
       <section id="view-income-expenditure" class="space-y-6 hidden">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Income &amp; Expenditure Account</h2>
-            <p class="text-xs text-gray-500">School operational profit &amp; loss statement</p>
+            <p class="text-xs text-gray-500">School operational profit &amp; loss statement for session 2026-27</p>
           </div>
-          <span id="pnlSurplusBadge" class="px-3 py-1 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">Surplus: Calculating...</span>
+          <div class="flex items-center space-x-2">
+            <span id="pnlSurplusBadge" class="px-3 py-1 rounded text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">Surplus: Calculating...</span>
+            <button onclick="exportPageToPdf('incExpContainer', 'Income_Expenditure_Account')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportIncomeExpToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div id="incExpContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
             <div>
               <div class="bg-red-50 text-red-900 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-red-200 flex justify-between">
@@ -659,15 +719,23 @@
 
       <!-- MODULE 8: BALANCE SHEET -->
       <section id="view-balance-sheet" class="space-y-6 hidden">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Balance Sheet</h2>
-            <p class="text-xs text-gray-500">Liabilities &amp; Trust Fund = Assets</p>
+            <p class="text-xs text-gray-500">Liabilities &amp; Trust Fund = Assets as on 04-Nov-2026</p>
           </div>
-          <div id="bsMatchBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Balance Sheet Matched</div>
+          <div class="flex items-center space-x-2">
+            <div id="bsMatchBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Balance Sheet Matched</div>
+            <button onclick="exportPageToPdf('bsContainer', 'Balance_Sheet_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportBalanceSheetToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div id="bsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div class="bg-white rounded border border-gray-200 overflow-hidden shadow-sm flex flex-col justify-between">
             <div>
               <div class="bg-gray-100 text-gray-800 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b border-gray-200 flex justify-between">
@@ -701,9 +769,17 @@
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Audit Trail (Changes Log)</h2>
             <p class="text-xs text-gray-500">Chronological history tracking who performed which accounting actions, corrections, and timestamps</p>
           </div>
-          <button onclick="clearAuditTrail()" class="text-xs text-gray-500 hover:text-red-600 border border-gray-300 rounded px-2.5 py-1 bg-white">
-            <i class="fa-regular fa-trash-can mr-1"></i> Clear Old Logs
-          </button>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportPageToPdf('auditTable', 'Audit_Trail_Changes_Log')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+            </button>
+            <button onclick="exportAuditTrailToExcel()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
+              <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+            </button>
+            <button onclick="clearAuditTrail()" class="text-xs text-gray-500 hover:text-red-600 border border-gray-300 rounded px-2.5 py-1.5 bg-white">
+              <i class="fa-regular fa-trash-can mr-1"></i> Clear
+            </button>
+          </div>
         </div>
 
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
@@ -713,7 +789,7 @@
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded">
-            <table class="w-full text-left text-xs">
+            <table id="auditTable" class="w-full text-left text-xs">
               <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-2.5 px-3 w-40">Timestamp (Date &amp; Time)</th>
@@ -738,13 +814,9 @@
     </div>
   </div>
 
-  <!-- ======================================================== -->
   <!-- MODAL: PRINTABLE VOUCHER SLIP -->
-  <!-- ======================================================== -->
   <div id="printVoucherModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl border border-gray-300 overflow-hidden flex flex-col max-h-[92vh]">
-      
-      <!-- Modal Toolbar -->
       <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center no-print flex-shrink-0">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-receipt text-[#00407a]"></i>
@@ -760,10 +832,7 @@
         </div>
       </div>
 
-      <!-- Printable Slip Area -->
       <div id="slipPrintableArea" class="p-6 overflow-y-auto flex-grow bg-white text-gray-900 text-xs">
-        
-        <!-- School Slip Header -->
         <div class="text-center pb-4 border-b-2 border-gray-800">
           <h2 class="text-lg font-black tracking-wide text-[#00407a] uppercase">DEMO PUBLIC SCHOOL</h2>
           <p class="text-[11px] text-gray-600 font-semibold">Varanasi, Uttar Pradesh, India | Affiliation No: 2130000</p>
@@ -773,7 +842,6 @@
           </div>
         </div>
 
-        <!-- Slip Meta Info -->
         <div class="grid grid-cols-2 gap-4 py-3 border-b border-gray-200 text-[11px]">
           <div>
             <p><span class="font-bold text-gray-600">Voucher No:</span> <strong id="slipVchNo" class="font-mono text-sm text-[#00407a]">VR-000</strong></p>
@@ -787,7 +855,6 @@
           </div>
         </div>
 
-        <!-- Slip Ledger Table -->
         <div class="py-3">
           <table class="w-full text-left text-xs border border-gray-300">
             <thead class="bg-gray-100 border-b border-gray-300 font-bold">
@@ -809,13 +876,11 @@
           </table>
         </div>
 
-        <!-- Narration Box -->
         <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-xs mb-8">
           <span class="font-bold text-gray-700">Narration / Being:</span>
           <p id="slipNarration" class="italic text-gray-800 mt-0.5">-</p>
         </div>
 
-        <!-- Signatures Block -->
         <div class="grid grid-cols-3 gap-6 pt-10 text-center text-xs">
           <div>
             <div class="border-t border-gray-500 pt-1 font-semibold text-gray-700">Prepared / Clerk</div>
@@ -830,23 +895,19 @@
             <p class="text-[9px] text-gray-400">Authorised Signatory</p>
           </div>
         </div>
-
       </div>
-
     </div>
   </div>
 
-  <div id="appToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2.5 rounded-md shadow-2xl text-xs flex items-center space-x-2 transform translate-y-24 transition-all duration-300 z-50">
+  <div id="appToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2.5 rounded-md shadow-2xl text-xs flex items-center space-x-2 transform translate-y-24 transition-all duration-300 z-50 no-print">
     <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
     <span id="toastMsg">Operation successful!</span>
   </div>
 
-  <!-- JAVASCRIPT STATE ENGINE -->
+  <!-- JAVASCRIPT STATE ENGINE & EXPORT UTILITIES -->
   <script>
     const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmt = n => INR.format(n);
-
-    // Current Operator Identity
     const CURRENT_USER = "CA Anurag Jaiswal";
 
     const INITIAL_LEDGERS = [
@@ -942,7 +1003,6 @@
       ledgerOptionsCache = opts;
     }
 
-    // Logger helper
     function recordAuditLog(action, item, details) {
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1030,6 +1090,236 @@
       setTimeout(() => t.classList.add('translate-y-24'), 3000);
     }
 
+    // ========================================================
+    // GLOBAL EXPORT UTILITIES (PDF & EXCEL .XLSX COMPATIBLE)
+    // ========================================================
+    function downloadCsvFile(filename, csvContent) {
+      const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast(`Exported ${filename}.csv successfully!`);
+    }
+
+    function exportPageToPdf(elementId, title) {
+      const target = document.getElementById(elementId);
+      if (!target) return;
+
+      const printWin = window.open('', '_blank', 'width=900,height=700');
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${title} - DEMO PUBLIC SCHOOL</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; font-size: 11px; }
+            h1 { margin: 0; font-size: 16px; color: #00407a; text-transform: uppercase; }
+            h2 { margin: 4px 0 16px 0; font-size: 13px; color: #475569; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+            th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; }
+            .no-print, button, input { display: none !important; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .header { text-align: center; border-bottom: 2px solid #00407a; padding-bottom: 12px; margin-bottom: 16px; }
+            .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>DEMO PUBLIC SCHOOL, VARANASI</h1>
+            <h2>${title.replace(/_/g, ' ')} | Academic Session: 2026-27</h2>
+            <div style="font-size:10px; color:#64748b;">Printed on: ${new Date().toLocaleString('en-GB')} | Generated by: ${CURRENT_USER}</div>
+          </div>
+          <div>${target.outerHTML}</div>
+          <div class="footer">
+            <span>Official Financial Accounting Record</span>
+            <span>Audited &amp; Verified</span>
+          </div>
+          <script>
+            window.onload = function() { window.print(); setTimeout(() => window.close(), 500); }
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    // Dedicated Excel CSV Exporters for Every Single Page
+    function exportLedgersToExcel() {
+      let csv = "Account Group,Ledger Name,In-Charge,Opening Balance,Balance Type\n";
+      ledgers.forEach(l => {
+        csv += `"${l.group}","${l.name}","${l.incharge}","${l.opBal}","${l.opType}"\n`;
+      });
+      downloadCsvFile("Ledger_Master_List", csv);
+    }
+
+    function exportSubLedgersToExcel() {
+      let csv = "SubLedger Code,SubLedger Name,Parent Ledger Account,Account Group\n";
+      subLedgers.forEach(s => {
+        const parent = ledgerMap.get(s.parentLedgerId) || { name: 'Unknown', group: 'N/A' };
+        csv += `"${s.code}","${s.name}","${parent.name}","${parent.group}"\n`;
+      });
+      downloadCsvFile("SubLedger_Master_List", csv);
+    }
+
+    function exportDayBookToExcel() {
+      let csv = "Date,Voucher No,Voucher Type,Debit Ledger,Credit Ledger,Amount (INR),Payment Mode,Instrument Ref,Narration\n";
+      vouchers.forEach(v => {
+        const drLedgers = v.rows.filter(r => r.dr > 0).map(r => (ledgerMap.get(r.ledgerId) || {}).name).join(" / ");
+        const crLedgers = v.rows.filter(r => r.cr > 0).map(r => (ledgerMap.get(r.ledgerId) || {}).name).join(" / ");
+        const total = v.rows.reduce((s, r) => s + r.dr, 0);
+        csv += `"${v.date}","${v.id}","${v.type}","${drLedgers}","${crLedgers}","${total}","${v.refMode}","${v.refNo}","${v.narration}"\n`;
+      });
+      downloadCsvFile("Day_Book_Transactions", csv);
+    }
+
+    function exportPassbookToExcel() {
+      const select = document.getElementById('passbookAccountSelect');
+      const ledger = ledgerMap.get(select.value || 'L1');
+      if (!ledger) return;
+
+      let csv = `Passbook Statement - ${ledger.name} (${ledger.group})\n`;
+      csv += "Date,Voucher No,Particulars,Debit / Deposit (INR),Credit / Withdrawal (INR),Running Balance (INR)\n";
+      
+      let running = (ledger.opType === 'Dr' ? ledger.opBal : -ledger.opBal);
+      csv += `"2026-04-01","-","Opening Balance Brought Forward","${ledger.opType === 'Dr' ? ledger.opBal : 0}","${ledger.opType === 'Cr' ? ledger.opBal : 0}","${running}"\n`;
+
+      for (let i = vouchers.length - 1; i >= 0; i--) {
+        const v = vouchers[i];
+        v.rows.forEach(r => {
+          if (r.ledgerId === ledger.id) {
+            running += (r.dr - r.cr);
+            const opp = v.rows.find(x => x.ledgerId !== ledger.id);
+            const oppName = opp && ledgerMap.get(opp.ledgerId) ? ledgerMap.get(opp.ledgerId).name : 'Multiple Ledgers';
+            csv += `"${v.date}","${v.id}","${oppName} - ${v.narration}","${r.dr}","${r.cr}","${running}"\n`;
+          }
+        });
+      }
+      downloadCsvFile(`Passbook_${ledger.name.replace(/\s+/g, '_')}`, csv);
+    }
+
+    function exportLedgerStatementToExcel() {
+      const select = document.getElementById('ledgerSelectStatement');
+      const ledger = ledgerMap.get(select.value || 'L4');
+      if (!ledger) return;
+
+      let csv = `Ledger Statement - ${ledger.name} (${ledger.group})\n`;
+      csv += "Date,Voucher No,Particulars,Debit (INR),Credit (INR),Running Balance (INR)\n";
+
+      let running = (ledger.opType === 'Dr' ? ledger.opBal : -ledger.opBal);
+      csv += `"2026-04-01","-","Opening Balance B/F","${ledger.opType === 'Dr' ? ledger.opBal : 0}","${ledger.opType === 'Cr' ? ledger.opBal : 0}","${running}"\n`;
+
+      for (let i = vouchers.length - 1; i >= 0; i--) {
+        const v = vouchers[i];
+        v.rows.forEach(r => {
+          if (r.ledgerId === ledger.id) {
+            running += (r.dr - r.cr);
+            const opp = v.rows.find(x => x.ledgerId !== ledger.id);
+            const oppName = opp && ledgerMap.get(opp.ledgerId) ? ledgerMap.get(opp.ledgerId).name : 'Various';
+            csv += `"${v.date}","${v.id}","${oppName} - ${v.narration}","${r.dr}","${r.cr}","${running}"\n`;
+          }
+        });
+      }
+      downloadCsvFile(`Statement_${ledger.name.replace(/\s+/g, '_')}`, csv);
+    }
+
+    function exportTrialBalanceToExcel() {
+      let csv = "S.No.,Ledger Particulars,Account Group,Debit Balance (INR),Credit Balance (INR)\n";
+      let grandDr = 0, grandCr = 0, sno = 1;
+
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        const drAmt = net > 0 ? net : 0;
+        const crAmt = net < 0 ? Math.abs(net) : 0;
+        grandDr += drAmt;
+        grandCr += crAmt;
+        csv += `"${sno++}","${l.name}","${l.group}","${drAmt}","${crAmt}"\n`;
+      });
+      csv += `"","GRAND TOTAL","","${grandDr}","${grandCr}"\n`;
+      downloadCsvFile("Trial_Balance_Report", csv);
+    }
+
+    function exportIncomeExpToExcel() {
+      let csv = "Category,Account Particulars,Amount (INR)\n";
+      let totalExp = 0, totalInc = 0;
+
+      csv += "EXPENDITURE,,,\n";
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        if (l.group === 'Indirect Expenses') {
+          totalExp += net;
+          csv += `"Expenditure","${l.name}","${net}"\n`;
+        }
+      });
+      csv += `"Total Expenditure","","${totalExp}"\n\n`;
+
+      csv += "INCOME,,,\n";
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        if (['Direct Income', 'Indirect Income'].includes(l.group)) {
+          const amt = Math.abs(net);
+          totalInc += amt;
+          csv += `"Income","${l.name}","${amt}"\n`;
+        }
+      });
+      csv += `"Total Revenue Income","","${totalInc}"\n`;
+      csv += `"Net Surplus / Deficit","","${totalInc - totalExp}"\n`;
+
+      downloadCsvFile("Income_Expenditure_Account", csv);
+    }
+
+    function exportBalanceSheetToExcel() {
+      let csv = "Side,Account Particulars,Account Group,Amount (INR)\n";
+      let totalLiab = 0, totalAsset = 0;
+
+      csv += "ASSETS,,,\n";
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        if (['Fixed Assets', 'Current Assets', 'Bank Accounts', 'Cash-in-Hand'].includes(l.group)) {
+          totalAsset += net;
+          csv += `"Asset","${l.name}","${l.group}","${net}"\n`;
+        }
+      });
+      csv += `"Total Assets","","","${totalAsset}"\n\n`;
+
+      csv += "LIABILITIES & CORPUS FUND,,,\n";
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        if (['Current Liabilities', 'Corpus / Capital Fund'].includes(l.group)) {
+          const amt = Math.abs(net);
+          totalLiab += amt;
+          csv += `"Liability","${l.name}","${l.group}","${amt}"\n`;
+        }
+      });
+
+      let totalExp = 0, totalInc = 0;
+      ledgers.forEach(l => {
+        const net = currentBalancesMap[l.id] || 0;
+        if (l.group === 'Indirect Expenses') totalExp += net;
+        else if (['Direct Income', 'Indirect Income'].includes(l.group)) totalInc += Math.abs(net);
+      });
+      const netSurplus = totalInc - totalExp;
+      totalLiab += netSurplus;
+
+      csv += `"Current Year Surplus","I&E Account","Surplus","${netSurplus}"\n`;
+      csv += `"Total Liabilities & Fund","","","${totalLiab}"\n`;
+
+      downloadCsvFile("Balance_Sheet_Report", csv);
+    }
+
+    function exportAuditTrailToExcel() {
+      let csv = "Timestamp,Action,Voucher / Item,Performed By,Description & Financial Impact\n";
+      auditLogs.forEach(log => {
+        csv += `"${log.timestamp}","${log.action}","${log.item}","${log.user}","${log.details}"\n`;
+      });
+      downloadCsvFile("Audit_Trail_Changes_Log", csv);
+    }
+
     // ==========================================
     // MODULE: PRINT VOUCHER SLIP
     // ==========================================
@@ -1082,9 +1372,7 @@
       document.getElementById('printVoucherModal').classList.add('hidden');
     }
 
-    // ==========================================
-    // MODULE: AUDIT TRAIL LOG VIEWER
-    // ==========================================
+    // AUDIT LOG VIEWER
     function renderAuditTrailLog() {
       const tbody = document.getElementById('auditTrailTableBody');
       if (!tbody) return;
@@ -1134,9 +1422,7 @@
       showToast("Audit logs cleared.");
     }
 
-    // ==========================================
     // VOUCHER TRANSACTION HANDLERS
-    // ==========================================
     function setupVoucherDraft() {
       editingVoucherId = null;
       document.getElementById('vchFormHeading').innerText = "Voucher Transaction";
@@ -1203,7 +1489,6 @@
       vouchers = vouchers.filter(v => v.id !== voucherId);
       saveState();
 
-      // Log the deletion with financial impact
       recordAuditLog('DELETE', voucherId, `Deleted ${vch ? vch.type : ''} voucher totaling ₹${fmt(totalAmount)} (Reversed in accounts)`);
 
       if (editingVoucherId === voucherId) {
@@ -1282,7 +1567,7 @@
               oninput="voucherDraftRows[${idx}].remark = this.value"
               class="w-full text-xs border border-gray-200 rounded px-2.5 py-1.5 outline-none" />
           </td>
-          <td class="py-2.5 px-3 text-center align-top">
+          <td class="py-2.5 px-3 text-center align-top no-print">
             ${voucherDraftRows.length > 2 ? `
               <button onclick="removeVoucherRowItem(${idx})" class="text-gray-400 hover:text-red-500 pt-1">
                 <i class="fa-solid fa-xmark text-sm"></i>
@@ -1421,9 +1706,7 @@
       renderAuditTrailLog();
     }
 
-    // ==========================================
-    // DAY BOOK WITH PRINT, EDIT & DELETE ACTIONS
-    // ==========================================
+    // DAY BOOK RENDER
     function renderDayBookEntries() {
       const tbody = document.getElementById('dayBookTableContent');
       const filter = document.getElementById('dayBookFilter').value;
@@ -1466,7 +1749,7 @@
             <div>${escapeHtml(v.narration)}</div>
             <div class="text-[10px] text-gray-400">Ref: ${v.refMode} (${v.refNo})</div>
           </td>
-          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+          <td class="py-2.5 px-3 text-center whitespace-nowrap no-print">
             <button onclick="printVoucherSlip('${v.id}')" title="Print Voucher Slip" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded px-2 py-1 text-xs font-bold mr-1.5 transition">
               <i class="fa-solid fa-print mr-1"></i> Slip
             </button>
@@ -1492,9 +1775,7 @@
       return 'bg-blue-100 text-blue-800 border border-blue-300';
     }
 
-    // ==========================================
-    // LEDGER & PASSBOOK REGISTERS
-    // ==========================================
+    // LEDGER MASTER ACTIONS
     function handleFormSubmitLedger(e) {
       e.preventDefault();
       const group = document.getElementById('inputLedgerGroup').value;
@@ -1555,7 +1836,7 @@
           <td class="py-2.5 px-4 text-gray-600">${escapeHtml(l.incharge)}</td>
           <td class="py-2.5 px-4 text-right font-mono text-gray-800">${l.opBal > 0 ? `₹${fmt(l.opBal)} <span class="font-bold text-[10px] text-gray-500">${l.opType}</span>` : '₹0.00'}</td>
           <td class="py-2.5 px-4 text-center"><span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">${isPnL ? 'Income & Exp' : 'Balance Sheet'}</span></td>
-          <td class="py-2.5 px-4 text-center">
+          <td class="py-2.5 px-4 text-center no-print">
             <button onclick="editLedgerAction('${l.id}')" title="Edit" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fa-regular fa-pen-to-square"></i></button>
             <button onclick="deleteLedgerAction('${l.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
           </td>
@@ -1590,6 +1871,7 @@
       showToast(`Loaded ${l.name} for editing.`);
     }
 
+    // SUBLEDGER ACTIONS
     function handleFormSubmitSubLedger(e) {
       e.preventDefault();
       const parentId = document.getElementById('inputSubParentLedger').value;
@@ -1620,7 +1902,7 @@
           <td class="py-2.5 px-4 font-semibold text-gray-800">${escapeHtml(s.name)}</td>
           <td class="py-2.5 px-4 text-gray-700">${escapeHtml(parent.name)}</td>
           <td class="py-2.5 px-4 text-gray-500 font-semibold">${escapeHtml(parent.group)}</td>
-          <td class="py-2.5 px-4 text-center">
+          <td class="py-2.5 px-4 text-center no-print">
             <button onclick="deleteSubLedger('${s.id}')" title="Delete" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>
           </td>
         `;
@@ -1636,6 +1918,7 @@
       showToast('SubLedger deleted.');
     }
 
+    // REGISTERS RENDERING
     function renderPassbookData() {
       const select = document.getElementById('passbookAccountSelect');
       const ledger = ledgerMap.get(select.value || 'L1');
