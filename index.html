@@ -1117,10 +1117,45 @@
       document.getElementById('masterSchoolModal').classList.add('hidden');
     }
 
-    async function handleMasterSchoolCreation(event) {
-      event.preventDefault();
-      showToast("Provisioning feature pending backend setup.");
-    }
+    async function handleMasterSchoolProvisioning(e) {
+  e.preventDefault();
+  
+  const schoolName = document.getElementById('mSchoolName').value.trim();
+  const city = document.getElementById('mSchoolCity').value.trim() || 'Varanasi';
+  const accountantName = document.getElementById('mAccountantName').value.trim();
+  const email = document.getElementById('mAccountantEmail').value.trim();
+  const password = document.getElementById('mAccountantPassword').value;
+
+  const btn = document.getElementById('btnMasterProvision');
+  btn.disabled = true;
+  btn.innerText = "Provisioning via Database...";
+
+  try {
+    // Backend RPC call to master_provision_school
+    const { data, error } = await window.sbClient.rpc('master_provision_school', {
+      p_school_name: schoolName,
+      p_school_city: city,
+      p_accountant_name: accountantName,
+      p_user_email: email,
+      p_user_password: password
+    });
+
+    if (error) throw new Error(error.message);
+
+    alert(`✅ School & User Onboarded Successfully!\n\nSchool: ${schoolName}\nEmail: ${email}\nPassword: ${password}\n\nClient can now log in with these credentials.`);
+    
+    closeMasterOnboardingModal();
+    document.getElementById('mSchoolName').value = '';
+    document.getElementById('mAccountantName').value = '';
+    document.getElementById('mAccountantEmail').value = '';
+
+  } catch (err) {
+    alert("Provisioning Error: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Create School & Link Profile";
+  }
+}
 
     // MISSING DAY BOOK RENDER FUNCTION
     function renderDayBookEntries() {
