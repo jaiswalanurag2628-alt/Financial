@@ -965,20 +965,51 @@
         <p class="text-xs text-blue-200 mt-1 font-medium">Financial Accounting System</p>
       </div>
 
-      <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="p-6 space-y-4">
-        <h3 class="text-base font-bold text-gray-800 text-center">Sign in to your School</h3>
-        
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Email Address</label>
-          <input type="email" id="authEmailInput" required placeholder="accountant@school.com"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
-        </div>
+      async function handleAuthLogin(e) {
+  e.preventDefault();
 
-        <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
-          <input type="password" id="authPasswordInput" required placeholder="••••••••"
-            class="w-full border border-gray-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none">
-        </div>
+  const emailInput = document.getElementById('authEmailInput');
+  const passwordInput = document.getElementById('authPasswordInput');
+  const btn = document.getElementById('authLoginBtn');
+  const errMsg = document.getElementById('authErrorMsg');
+
+  const email = emailInput.value.trim().toLowerCase();
+  const password = passwordInput.value;
+
+  if (errMsg) errMsg.classList.add('hidden');
+  btn.disabled = true;
+  btn.innerText = "Signing in...";
+
+  try {
+    const { data, error } = await window.sbClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || !data.session) {
+      throw new Error("Unable to establish session. Please try again.");
+    }
+
+    // Call auth check to load school data
+    await checkAuthSession();
+
+  } catch (err) {
+    console.error("Login process failed:", err);
+    btn.disabled = false;
+    btn.innerText = "Login & Load Accounts";
+    
+    if (errMsg) {
+      errMsg.innerText = err.message || "Invalid email or password.";
+      errMsg.classList.remove('hidden');
+    } else {
+      alert("Login Error: " + (err.message || "Invalid credentials"));
+    }
+  }
+}
 
         <button type="submit" id="authLoginBtn"
           class="w-full bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold py-2.5 rounded shadow transition">
