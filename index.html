@@ -147,7 +147,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00]">Collect Student Fee</h2>
-            <p class="text-xs text-gray-500">Collecting fee automatically posts a double-entry Receipt Voucher (F6) with Wing/Cost Centre tracking.</p>
+            <p class="text-xs text-gray-500">Collecting fee automatically posts a double-entry Receipt Voucher (F6) with auto-detected Wing/Cost Centre.</p>
           </div>
           <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-link mr-1"></i> Auto-Voucher Sync Active</span>
         </div>
@@ -161,7 +161,7 @@
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div><label class="block text-xs font-bold text-gray-700 mb-1">Admission No. <span class="text-red-500">*</span></label><input type="text" id="feeAdmNo" required placeholder="e.g. 1042" class="erp-input font-mono"></div>
-              <div><label class="block text-xs font-bold text-gray-700 mb-1">Class &amp; Section <span class="text-red-500">*</span></label><select id="feeStudentClass" required class="erp-input"></select></div>
+              <div><label class="block text-xs font-bold text-gray-700 mb-1">Class &amp; Section <span class="text-red-500">*</span></label><select id="feeStudentClass" onchange="onFeeClassChange()" required class="erp-input"></select></div>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div><label class="block text-xs font-bold text-gray-700 mb-1">Student Full Name <span class="text-red-500">*</span></label><input type="text" id="feeStudentName" required placeholder="e.g. Aarav Sharma" class="erp-input"></div>
@@ -361,7 +361,7 @@
             <div><label class="block text-xs font-bold text-gray-700 mb-1">* Voucher Date</label><input type="date" id="vchDateInput" class="erp-input"></div>
           </div>
 
-          <!-- TDS Vendor Auto-Splitter (Shown when Voucher Type = Payment) -->
+          <!-- TDS Vendor Auto-Splitter -->
           <div id="tdsHelperBox" class="hidden bg-purple-50/80 border border-purple-200 rounded p-3.5 space-y-2.5">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-purple-950"><i class="fa-solid fa-percent mr-1.5 text-purple-700"></i> Vendor TDS Auto-Deduction Calculator (Income Tax Act)</span>
@@ -410,7 +410,7 @@
               </table>
             </div>
             <div class="mt-2">
-              <button type="button" onclick="voucherDraftRows.push({ ledgerId: '', costCentre: 'General / Admin', dr: 0, cr: 0, remark: '' }); renderVoucherRowsDraft();" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded border border-gray-300 flex items-center gap-1">
+              <button type="button" onclick="voucherDraftRows.push({ ledgerId: '', costCentre: state.costCentres[0] || 'General / Admin', dr: 0, cr: 0, remark: '' }); renderVoucherRowsDraft();" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded border border-gray-300 flex items-center gap-1">
                 <i class="fa-solid fa-plus text-[#e68a00]"></i> + Add Row
               </button>
             </div>
@@ -678,15 +678,27 @@
         </div>
       </section>
 
-      <!-- MODULE 8C: COST CENTRE (WING-WISE PROFITABILITY) -->
+      <!-- MODULE 8C: COST CENTRE (WING-WISE PROFITABILITY + ADD/DELETE MANAGER) -->
       <section id="view-cost-centres" class="space-y-6 hidden">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <div><h2 class="text-xl font-bold text-[#e68a00] mb-1">Cost Centre Report (Wing / Department-Wise)</h2><p class="text-xs text-gray-500">Income vs. Expenditure breakdown across School Wings, Transport &amp; Hostel</p></div>
+          <div><h2 class="text-xl font-bold text-[#e68a00] mb-1">Cost Centre Manager &amp; Report (Wing / Department-Wise)</h2><p class="text-xs text-gray-500">Add custom School Wings/Departments &amp; track Income vs. Expenditure profitability</p></div>
           <div class="flex items-center space-x-2">
             <button onclick="exportPageToPdf('costCentreTable', 'Cost_Centre_Wing_Report')" class="btn-pdf"><i class="fa-solid fa-file-pdf text-sm"></i> Export PDF</button>
             <button onclick="exportReportExcel('costcentre')" class="btn-excel"><i class="fa-solid fa-file-excel text-sm"></i> Export Excel</button>
           </div>
         </div>
+
+        <!-- Add New Cost Centre Form -->
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm">
+          <form onsubmit="handleAddCostCentre(event)" class="flex flex-col sm:flex-row items-end gap-3">
+            <div class="flex-grow w-full">
+              <label class="block text-xs font-bold text-gray-700 mb-1">New Cost Centre / Department / Wing Name <span class="text-red-500">*</span></label>
+              <input type="text" id="newCostCentreInput" required placeholder="e.g. Science Lab, Sports Academy, Pre-Primary Wing..." class="erp-input py-2">
+            </div>
+            <button type="submit" class="btn-primary py-2 px-5 whitespace-nowrap shadow-xs"><i class="fa-solid fa-plus mr-1"></i> Add Cost Centre</button>
+          </form>
+        </div>
+
         <div class="bg-white rounded border border-gray-200 p-4 shadow-sm overflow-x-auto">
           <table id="costCentreTable" class="w-full text-left text-xs">
             <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
@@ -695,6 +707,7 @@
                 <th class="py-2.5 px-4 text-right text-emerald-700">Total Income (Cr) (₹)</th>
                 <th class="py-2.5 px-4 text-right text-rose-700">Total Expense (Dr) (₹)</th>
                 <th class="py-2.5 px-4 text-right text-[#00407a]">Net Surplus / (Deficit) (₹)</th>
+                <th class="py-2.5 px-4 text-center w-20 no-print">Action</th>
               </tr>
             </thead>
             <tbody id="costCentreTableBody" class="divide-y divide-gray-100"></tbody>
@@ -882,11 +895,11 @@
   <script>
     const INR = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fmt = n => INR.format(n);
-    const STORAGE_KEY = 'SCHOOLMITRA_OFFLINE_ERP_V3';
+    const STORAGE_KEY = 'SCHOOLMITRA_OFFLINE_ERP_V4';
     const CURRENT_USER = "Anurag Jaiswal";
     const $ = id => document.getElementById(id);
 
-    const COST_CENTRES = ['General / Admin', 'Primary Wing (Nur-5)', 'Middle & Senior Wing (6-12)', 'Transport Department', 'Hostel & Mess'];
+    const DEFAULT_COST_CENTRES = ['General / Admin', 'Primary Wing (Nur-5)', 'Middle & Senior Wing (6-12)', 'Transport Department', 'Hostel & Mess'];
 
     const MENU_CONFIG = [
       {
@@ -914,14 +927,14 @@
           { id: 'income-expenditure', label: 'Income & Expenditure', title: 'Income & Expenditure Account', icon: 'fa-chart-line text-emerald-400' },
           { id: 'balance-sheet', label: 'Balance Sheet', title: 'Balance Sheet', icon: 'fa-vault text-amber-400' },
           { id: 'fixed-assets', label: 'Fixed Assets & Dep.', title: 'Fixed Assets & Depreciation Schedule', icon: 'fa-bus text-orange-300' },
-          { id: 'cost-centres', label: 'Cost Centres (Wings)', title: 'Cost Centre Report (Wing-Wise)', icon: 'fa-sitemap text-teal-300' },
+          { id: 'cost-centres', label: 'Cost Centres (Wings)', title: 'Cost Centre Manager & Wing Report', icon: 'fa-sitemap text-teal-300' },
           { id: 'year-closing', label: 'Year-End Closing', title: 'Financial Year Closing & Carry Forward', icon: 'fa-lock text-rose-300' },
           { id: 'audit-trail', label: 'Audit Trail (Log)', title: 'Audit Trail (Changes Log)', icon: 'fa-clock-rotate-left text-rose-300' }
         ]
       }
     ];
 
-    let state = { schoolName: "DEMO PUBLIC SCHOOL", session: "2026-27", ledgers: [], subLedgers: [], vouchers: [], auditLogs: [] };
+    let state = { schoolName: "DEMO PUBLIC SCHOOL", session: "2026-27", costCentres: [...DEFAULT_COST_CENTRES], ledgers: [], subLedgers: [], vouchers: [], auditLogs: [] };
     let nextVchCounter = 101, ledgerMap = new Map(), ledgerOptionsCache = '', currentBalancesMap = {};
     let feeHeadDraftRows = [], voucherDraftRows = [], editingVoucherId = null, editingLedgerId = null;
     let currentSortColumn = 'name', sortAscending = true;
@@ -934,6 +947,7 @@
       return {
         schoolName: "DEMO PUBLIC SCHOOL",
         session: "2026-27",
+        costCentres: [...DEFAULT_COST_CENTRES],
         ledgers: [
           { id: 'L1', name: 'Cash-in-Hand', group: 'Cash-in-Hand', incharge: 'Cashier', opBal: 25000, opType: 'Dr', depRate: 0 },
           { id: 'L2', name: 'ICICI Bank Main A/c', group: 'Bank Accounts', incharge: 'Accountant', opBal: 150000, opType: 'Dr', depRate: 0 },
@@ -966,9 +980,11 @@
 
     function loadStorage() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('SCHOOLMITRA_OFFLINE_ERP_V2'));
-        if (parsed && Array.isArray(parsed.ledgers)) state = parsed;
-        else { state = getDefaultSeedData(); saveStorage(); }
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem('SCHOOLMITRA_OFFLINE_ERP_V3'));
+        if (parsed && Array.isArray(parsed.ledgers)) {
+          state = parsed;
+          if (!Array.isArray(state.costCentres) || !state.costCentres.length) state.costCentres = [...DEFAULT_COST_CENTRES];
+        } else { state = getDefaultSeedData(); saveStorage(); }
       } catch {
         state = getDefaultSeedData(); saveStorage();
       }
@@ -982,7 +998,7 @@
     function resetLocalDemoData() {
       if (!confirm("Reset all ledgers, fees, and vouchers back to default sample data?")) return;
       localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('SCHOOLMITRA_OFFLINE_ERP_V2');
+      localStorage.removeItem('SCHOOLMITRA_OFFLINE_ERP_V3');
       initApp();
       showToast("Reset to default sample data.");
     }
@@ -1009,6 +1025,7 @@
           const restored = parsed.data || parsed;
           if (!Array.isArray(restored.ledgers) || !Array.isArray(restored.vouchers)) throw new Error('Invalid format');
           state = restored;
+          if (!Array.isArray(state.costCentres)) state.costCentres = [...DEFAULT_COST_CENTRES];
           saveStorage();
           loadStorage();
           refreshAllViews();
@@ -1059,7 +1076,7 @@
 
     function initApp() {
       renderSidebarMenu();
-      populateStaticDropdowns();
+      populateClassesDropdown();
       loadStorage();
       $('globalFromDate').value = filterFromDate;
       $('globalToDate').value = filterToDate;
@@ -1092,10 +1109,16 @@
       `).join('');
     }
 
-    function populateStaticDropdowns() {
+    function populateClassesDropdown() {
       const classes = ['Nursery', 'LKG', 'UKG', ...Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`)];
       $('feeStudentClass').innerHTML = classes.map(c => `<option value="${c}" ${c === 'Class 5' ? 'selected' : ''}>${c}</option>`).join('');
-      $('feeCostCentreSelect').innerHTML = COST_CENTRES.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function onFeeClassChange() {
+      const cls = $('feeStudentClass').value;
+      const isPrimary = ['Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'].includes(cls);
+      const targetWing = isPrimary ? 'Primary Wing (Nur-5)' : 'Middle & Senior Wing (6-12)';
+      if (state.costCentres.includes(targetWing)) $('feeCostCentreSelect').value = targetWing;
     }
 
     function navigateTo(viewId, customTitle) {
@@ -1175,6 +1198,8 @@
       $('feeDepositLedgerSelect').innerHTML = state.ledgers
         .filter(l => ['Cash-in-Hand', 'Bank Accounts'].includes(l.group))
         .map(l => `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`).join('');
+
+      onFeeClassChange();
 
       const feeLedgers = state.ledgers.filter(l => ['Direct Income', 'Indirect Income', 'Current Liabilities'].includes(l.group));
       const findL = kw => (feeLedgers.find(l => l.name.toLowerCase().includes(kw)) || feeLedgers[0] || {}).id || '';
@@ -1291,12 +1316,13 @@
 
       const tdsAmt = Math.round((gross * rate) / 100);
       const netPayable = gross - tdsAmt;
+      const defCc = state.costCentres[0] || 'General / Admin';
 
       $('vchMainNarration').value = `Paid to ${vendor} (Gross ₹${fmt(gross)} less TDS Sec ${sec} @ ${rate}% ₹${fmt(tdsAmt)})`;
       voucherDraftRows = [
-        { ledgerId: expLedgerId, costCentre: 'General / Admin', dr: gross, cr: 0, remark: `Gross Bill - ${vendor}` },
-        { ledgerId: bankLedgerId, costCentre: 'General / Admin', dr: 0, cr: netPayable, remark: `Net Paid to ${vendor}` },
-        { ledgerId: tdsLedger.id, costCentre: 'General / Admin', dr: 0, cr: tdsAmt, remark: `Sec ${sec} @ ${rate}% | Deductee: ${vendor}` }
+        { ledgerId: expLedgerId, costCentre: defCc, dr: gross, cr: 0, remark: `Gross Bill - ${vendor}` },
+        { ledgerId: bankLedgerId, costCentre: defCc, dr: 0, cr: netPayable, remark: `Net Paid to ${vendor}` },
+        { ledgerId: tdsLedger.id, costCentre: defCc, dr: 0, cr: tdsAmt, remark: `Sec ${sec} @ ${rate}% | Deductee: ${vendor}` }
       ];
       renderVoucherRowsDraft();
       showToast(`Auto-split Gross ₹${fmt(gross)} -> Net ₹${fmt(netPayable)} + TDS ₹${fmt(tdsAmt)}`);
@@ -1356,13 +1382,14 @@
       const bankL = state.ledgers.find(l => l.group === 'Bank Accounts') || state.ledgers.find(l => l.group === 'Cash-in-Hand');
       if (!tdsL || !bankL) return showToast('TDS or Bank ledger missing!', true);
 
+      const defCc = state.costCentres[0] || 'General / Admin';
       navigateTo('voucher-entry', 'Deposit TDS Govt. Challan');
       $('vchTypeSelect').value = 'Payment';
       onVoucherTypeChange();
       $('vchMainNarration').value = `TDS Challan No. 281 deposited to Govt. A/c (${section})`;
       voucherDraftRows = [
-        { ledgerId: tdsL.id, costCentre: 'General / Admin', dr: amount, cr: 0, remark: `${section} Challan Deposit` },
-        { ledgerId: bankL.id, costCentre: 'General / Admin', dr: 0, cr: amount, remark: `Paid via NetBanking` }
+        { ledgerId: tdsL.id, costCentre: defCc, dr: amount, cr: 0, remark: `${section} Challan Deposit` },
+        { ledgerId: bankL.id, costCentre: defCc, dr: 0, cr: amount, remark: `Paid via NetBanking` }
       ];
       renderVoucherRowsDraft();
       showToast('TDS Challan Payment Voucher pre-filled. Verify & Save.');
@@ -1607,7 +1634,7 @@
         state.ledgers.push(depLedger);
       }
 
-      const depRows = [];
+      const depRows = [], defCc = state.costCentres[0] || 'General / Admin';
       let totalDep = 0;
       state.ledgers.filter(l => l.group === 'Fixed Assets').forEach(a => {
         const gross = Math.max(0, currentBalancesMap[a.id] || 0);
@@ -1615,7 +1642,7 @@
         const depAmt = Math.round((gross * rate) / 100);
         if (depAmt > 0) {
           totalDep += depAmt;
-          depRows.push({ ledgerId: a.id, costCentre: 'General / Admin', dr: 0, cr: depAmt, remark: `Depreciation @ ${rate}% on ₹${fmt(gross)}` });
+          depRows.push({ ledgerId: a.id, costCentre: defCc, dr: 0, cr: depAmt, remark: `Depreciation @ ${rate}% on ₹${fmt(gross)}` });
         }
       });
 
@@ -1626,7 +1653,7 @@
       state.vouchers.unshift({
         id: vchNo, date, type: 'Journal', refMode: 'Direct / NA', refNo: 'CA-DEP-ADJ',
         narration: `Annual Depreciation charged on Block of Fixed Assets as on ${date}`,
-        rows: [{ ledgerId: depLedger.id, costCentre: 'General / Admin', dr: totalDep, cr: 0, remark: 'Total Annual Depreciation' }, ...depRows]
+        rows: [{ ledgerId: depLedger.id, costCentre: defCc, dr: totalDep, cr: 0, remark: 'Total Annual Depreciation' }, ...depRows]
       });
 
       recordAuditLog('CREATE', vchNo, `Auto-posted Depreciation Journal Voucher totaling ₹${fmt(totalDep)}`);
@@ -1635,19 +1662,46 @@
       printVoucherSlip(vchNo);
     }
 
-    // --- COST CENTRE (WING-WISE PROFITABILITY) ---
+    // --- COST CENTRE MANAGER & REPORT ---
+    function handleAddCostCentre(e) {
+      e.preventDefault();
+      const input = $('newCostCentreInput');
+      const name = input.value.trim();
+      if (!name) return;
+      if (state.costCentres.some(c => c.toLowerCase() === name.toLowerCase())) {
+        return showToast('This Cost Centre already exists!', true);
+      }
+      state.costCentres.push(name);
+      input.value = '';
+      recordAuditLog('CREATE', 'COST_CENTRE', `Added new Cost Centre / Wing: "${name}"`);
+      refreshAllViews();
+      showToast(`Cost Centre "${name}" added!`);
+    }
+
+    function deleteCostCentre(name) {
+      if (state.costCentres.length <= 1) return showToast('At least one Cost Centre must remain!', true);
+      const inUse = state.vouchers.some(v => v.rows.some(r => r.costCentre === name));
+      if (inUse) return showToast('Cannot delete Cost Centre that is already used in vouchers!', true);
+      if (!confirm(`Delete Cost Centre "${name}"?`)) return;
+
+      state.costCentres = state.costCentres.filter(c => c !== name);
+      recordAuditLog('DELETE', 'COST_CENTRE', `Deleted Cost Centre / Wing: "${name}"`);
+      refreshAllViews();
+      showToast(`Deleted "${name}".`);
+    }
+
     function renderCostCentreReport() {
       const tbody = $('costCentreTableBody');
       if (!tbody) return;
       const stats = {};
-      COST_CENTRES.forEach(c => stats[c] = { inc: 0, exp: 0 });
+      state.costCentres.forEach(c => stats[c] = { inc: 0, exp: 0 });
 
       state.vouchers.forEach(v => {
         if (!isInDateRange(v.date)) return;
         v.rows.forEach(r => {
           const l = ledgerMap.get(r.ledgerId);
           if (!l) return;
-          const cc = r.costCentre || 'General / Admin';
+          const cc = r.costCentre || state.costCentres[0] || 'General / Admin';
           if (!stats[cc]) stats[cc] = { inc: 0, exp: 0 };
           if (['Direct Income', 'Indirect Income'].includes(l.group)) stats[cc].inc += (r.cr - r.dr);
           if (l.group === 'Indirect Expenses') stats[cc].exp += (r.dr - r.cr);
@@ -1658,11 +1712,15 @@
       tbody.innerHTML = Object.entries(stats).map(([wing, val]) => {
         totInc += val.inc; totExp += val.exp;
         const net = val.inc - val.exp;
+        const canDelete = !DEFAULT_COST_CENTRES.includes(wing) && val.inc === 0 && val.exp === 0;
         return `<tr class="hover:bg-gray-50 border-b border-gray-100">
           <td class="py-2.5 px-4 font-bold text-gray-800">${escapeHtml(wing)}</td>
           <td class="py-2.5 px-4 text-right font-mono text-emerald-700 font-semibold">₹${fmt(val.inc)}</td>
           <td class="py-2.5 px-4 text-right font-mono text-rose-700 font-semibold">₹${fmt(val.exp)}</td>
           <td class="py-2.5 px-4 text-right font-mono font-bold ${net >= 0 ? 'text-[#00407a]' : 'text-red-600'}">${net >= 0 ? '₹' + fmt(net) : '(₹' + fmt(Math.abs(net)) + ')'}</td>
+          <td class="py-2.5 px-4 text-center no-print">
+            ${canDelete ? `<button onclick="deleteCostCentre('${escapeHtml(wing)}')" title="Delete Custom Wing" class="text-gray-400 hover:text-red-600"><i class="fa-regular fa-trash-can"></i></button>` : '<span class="text-[10px] text-gray-400">Active</span>'}
+          </td>
         </tr>`;
       }).join('') + `
         <tr class="bg-gray-100 font-bold border-t-2 border-gray-300">
@@ -1670,6 +1728,7 @@
           <td class="py-3 px-4 text-right font-mono text-emerald-800">₹${fmt(totInc)}</td>
           <td class="py-3 px-4 text-right font-mono text-rose-800">₹${fmt(totExp)}</td>
           <td class="py-3 px-4 text-right font-mono text-[#00407a]">₹${fmt(totInc - totExp)}</td>
+          <td class="no-print"></td>
         </tr>`;
     }
 
@@ -1722,7 +1781,7 @@
         filename = 'Cost_Centre_Wing_Report';
         csv = "Cost Centre / Wing,Income (INR),Expense (INR),Net Surplus/Deficit (INR)\n";
         document.querySelectorAll('#costCentreTableBody tr').forEach(tr => {
-          csv += Array.from(tr.children).map(td => `"${td.innerText}"`).join(',') + '\n';
+          csv += Array.from(tr.children).slice(0, 4).map(td => `"${td.innerText}"`).join(',') + '\n';
         });
       } else if (type === 'incexp') {
         filename = 'Income_Expenditure_Account';
@@ -1829,6 +1888,7 @@
 
     function setupVoucherDraft() {
       editingVoucherId = null;
+      const defCc = state.costCentres[0] || 'General / Admin';
       $('vchFormHeading').innerText = "Voucher Transaction";
       $('vchFormSubtitle').innerText = "Double-entry accounting transaction form with Wing Cost Centre & Vendor TDS Deduction helper.";
       $('vchEditModeBadge').classList.add('hidden');
@@ -1836,7 +1896,7 @@
       $('vchNumberInput').value = `VR-${nextVchCounter}`;
       $('vchDateInput').value = new Date().toISOString().slice(0, 10);
       $('vchInstrumentNo').value = ''; $('vchMainNarration').value = '';
-      voucherDraftRows = [{ ledgerId: '', costCentre: 'General / Admin', dr: 0, cr: 0, remark: '' }, { ledgerId: '', costCentre: 'General / Admin', dr: 0, cr: 0, remark: '' }];
+      voucherDraftRows = [{ ledgerId: '', costCentre: defCc, dr: 0, cr: 0, remark: '' }, { ledgerId: '', costCentre: defCc, dr: 0, cr: 0, remark: '' }];
       onVoucherTypeChange();
       renderVoucherRowsDraft();
     }
@@ -1854,7 +1914,7 @@
       $('vchNumberInput').value = vch.id; $('vchDateInput').value = vch.date; $('vchTypeSelect').value = vch.type;
       onVoucherTypeChange();
       $('vchPaymentMode').value = vch.refMode || 'Cash'; $('vchInstrumentNo').value = vch.refNo || ''; $('vchMainNarration').value = vch.narration || '';
-      voucherDraftRows = vch.rows.map(r => ({ ledgerId: r.ledgerId, costCentre: r.costCentre || 'General / Admin', dr: r.dr || 0, cr: r.cr || 0, remark: r.remark || '' }));
+      voucherDraftRows = vch.rows.map(r => ({ ledgerId: r.ledgerId, costCentre: r.costCentre || state.costCentres[0] || 'General / Admin', dr: r.dr || 0, cr: r.cr || 0, remark: r.remark || '' }));
       renderVoucherRowsDraft();
       showToast(`Loaded ${vch.id} for correction.`);
     }
@@ -1888,7 +1948,9 @@
     }
 
     function renderVoucherRowsDraft() {
-      const ccOpts = COST_CENTRES.map(c => `<option value="${c}">${c}</option>`).join('');
+      const ccOpts = state.costCentres.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      const defCc = state.costCentres[0] || 'General / Admin';
+
       $('vchRowsContainer').innerHTML = voucherDraftRows.map((row, idx) => `
         <tr id="vch-row-${idx}" class="hover:bg-gray-50 border-b border-gray-100">
           <td class="py-2.5 px-2 text-center font-bold align-top">
@@ -1904,7 +1966,7 @@
           </td>
           <td class="py-2.5 px-2 align-top">
             <select onchange="voucherDraftRows[${idx}].costCentre = this.value" class="erp-input">
-              ${ccOpts.replace(`value="${row.costCentre || 'General / Admin'}"`, `value="${row.costCentre || 'General / Admin'}" selected`)}
+              ${ccOpts.replace(`value="${escapeHtml(row.costCentre || defCc)}"`, `value="${escapeHtml(row.costCentre || defCc)}" selected`)}
             </select>
           </td>
           <td class="py-2.5 px-2 text-right align-top"><input type="number" step="0.01" min="0" value="${row.dr || ''}" placeholder="0.00" oninput="updateRowAmt(${idx}, 'dr', this.value)" class="erp-input text-right font-mono" /></td>
@@ -1949,10 +2011,11 @@
     function submitVoucherEntry() {
       const vchNo = $('vchNumberInput').value, vchType = $('vchTypeSelect').value, vDate = $('vchDateInput').value, mode = $('vchPaymentMode').value;
       const totalAmount = voucherDraftRows.reduce((s, r) => s + (parseFloat(r.dr) || 0), 0);
+      const defCc = state.costCentres[0] || 'General / Admin';
       const newVch = {
         id: vchNo, date: vDate, type: vchType, refMode: mode, bankClearedDate: mode === 'Cash' ? vDate : '',
         refNo: $('vchInstrumentNo').value.trim() || 'N/A', narration: $('vchMainNarration').value.trim() || 'Voucher transaction',
-        rows: voucherDraftRows.map(r => ({ ledgerId: r.ledgerId, costCentre: r.costCentre || 'General / Admin', dr: parseFloat(r.dr) || 0, cr: parseFloat(r.cr) || 0, remark: r.remark || '' }))
+        rows: voucherDraftRows.map(r => ({ ledgerId: r.ledgerId, costCentre: r.costCentre || defCc, dr: parseFloat(r.dr) || 0, cr: parseFloat(r.cr) || 0, remark: r.remark || '' }))
       };
 
       if (editingVoucherId) {
@@ -2188,6 +2251,7 @@
 
     function populateDropdownOptions() {
       const toOpts = list => list.map(l => `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`).join('');
+      if ($('feeCostCentreSelect')) $('feeCostCentreSelect').innerHTML = state.costCentres.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
       if ($('inputSubParentLedger')) $('inputSubParentLedger').innerHTML = '<option value="" disabled selected>-- Select Parent Ledger --</option>' + toOpts(state.ledgers);
       if ($('passbookAccountSelect')) $('passbookAccountSelect').innerHTML = toOpts(state.ledgers.filter(l => ['Bank Accounts', 'Cash-in-Hand'].includes(l.group)));
       if ($('ledgerSelectStatement')) $('ledgerSelectStatement').innerHTML = toOpts(state.ledgers);
