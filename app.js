@@ -23,6 +23,8 @@ let ledgerMap = new Map();
 let ledgerOptionsCache = '';
 let currentBalancesMap = {};
 
+let feeHeadDraftRows = [];
+
 let voucherDraftRows = [
   { ledgerId: '', dr: 0, cr: 0, remark: '' },
   { ledgerId: '', dr: 0, cr: 0, remark: '' }
@@ -205,18 +207,47 @@ async function handleAuthLogout() {
   window.location.reload();
 }
 
-// 5. CLOUD SYNC
+// 5. CLOUD SYNC & AUTO-PROVISION DEFAULT FEE LEDGERS
+async function ensureDefaultFeeLedgers() {
+  if (!currentSchoolId) return;
+  const requiredLedgers = [
+    { name: 'Cash-in-Hand', group: 'Cash-in-Hand' },
+    { name: 'School Bank Account', group: 'Bank Accounts' },
+    { name: 'Tuition Fee A/c', group: 'Direct Income' },
+    { name: 'Transport Fee A/c', group: 'Direct Income' },
+    { name: 'Exam & Activity Fee A/c', group: 'Direct Income' }
+  ];
+
+  const missing = requiredLedgers.filter(req => !ledgers.some(l => l.name.toLowerCase() === req.name.toLowerCase()));
+  if (missing.length > 0) {
+    const rowsToInsert = missing.map(m => ({
+      school_id: currentSchoolId,
+      name: m.name,
+      account_group: m.group,
+      incharge: 'Fee Counter',
+      op_bal: 0,
+      op_type: m.group === 'Direct Income' ? 'Cr' : 'Dr'
+    }));
+    await sbClient.from('ledgers').insert(rowsToInsert);
+    const { data: refreshed } = await sbClient.from('ledgers').select('*');
+    if (refreshed) {
+      ledgers = refreshed.map(l => ({
+        id: l.id,
+        name: l.name,
+        group: l.account_group,
+        incharge: l.incharge || 'ABC',
+        opBal: parseFloat(l.op_bal) || 0,
+        opType: l.op_type || 'Dr'
+      }));
+    }
+  }
+}
+
 async function syncSchoolDataFromCloud() {
-  showToast("Fetching school accounts from cloud...");
+  showToast("Fetching school accounts & fee records from cloud...");
 
-  const { data: cloudLedgers, error: lErr } = await sbClient
-    .from('ledgers')
-    .select('*');
-
-  const { data: cloudVouchers, error: vErr } = await sbClient
-    .from('vouchers')
-    .select('*')
-    .order('voucher_date', { ascending: false });
+  const { data: cloudLedgers } = await sbClient.from('ledgers').select('*');
+  const { data: cloudVouchers } = await sbClient.from('vouchers').select('*').order('voucher_date', { ascending: false });
 
   if (cloudLedgers) {
     ledgers = cloudLedgers.map(l => ({
@@ -228,6 +259,8 @@ async function syncSchoolDataFromCloud() {
       opType: l.op_type || 'Dr'
     }));
   }
+
+  await ensureDefaultFeeLedgers();
 
   if (cloudVouchers) {
     vouchers = cloudVouchers.map(v => ({
@@ -245,6 +278,8 @@ async function syncSchoolDataFromCloud() {
 
   buildLedgerIndex();
   calculateMasterBalances();
+  setupFeeCollectionForm();
+  renderFeeReceiptsRegister();
   renderLedgersTable();
   renderDayBookEntries();
   renderPassbookData();
@@ -253,6 +288,213 @@ async function syncSchoolDataFromCloud() {
   setupVoucherDraft();
 }
 
+// --- FEE MODULE LOGIC (AUTO-VOUCHER INTEGRATION) ---
+function setupFeeCollectionForm() {
+  const recInput = document.getElementById('feeReceiptNo');
+  const dateInput = document.getElementById('feeCollectionDate');
+  const depSelect = document.getElementById('feeDepositLedgerSelect');
+
+  if (recInput) recInput.value = `VR-${nextVchCounter}`;
+  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  if (depSelect) {
+    depSelect.innerHTML = '';
+    ledgers.filter(l => ['Cash-in-Hand', 'Bank Accounts'].includes(l.group)).forEach(l => {
+      depSelect.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`;
+    });
+  }
+
+  const incomeLedgers = ledgers.filter(l => ['Direct Income', 'Indirect Income'].includes(l.group));
+  const tuitionL = incomeLedgers.find(l => l.name.toLowerCase().includes('tuition')) || incomeLedgers[0];
+  const transportL = incomeLedgers.find(l => l.name.toLowerCase().includes('transport')) || incomeLedgers[0];
+
+  feeHeadDraftRows = [
+    { ledgerId: tuitionL ? tuitionL.id : '', amount: 0 },
+    { ledgerId: transportL ? transportL.id : '', amount: 0 }
+  ];
+  renderFeeHeadRows();
+}
+
+function onFeePayModeChange() {
+  const mode = document.getElementById('feePayMode').value;
+  const depSelect = document.getElementById('feeDepositLedgerSelect');
+  if (!depSelect) return;
+
+  if (mode === 'Cash') {
+    const cashL = ledgers.find(l => l.group === 'Cash-in-Hand');
+    if (cashL) depSelect.value = cashL.id;
+  } else {
+    const bankL = ledgers.find(l => l.group === 'Bank Accounts');
+    if (bankL) depSelect.value = bankL.id;
+  }
+}
+
+function renderFeeHeadRows() {
+  const tbody = document.getElementById('feeHeadsRowsContainer');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  let incomeOpts = '<option value="" disabled selected>-- Select Fee Income Ledger --</option>';
+  ledgers.filter(l => ['Direct Income', 'Indirect Income'].includes(l.group)).forEach(l => {
+    incomeOpts += `<option value="${l.id}">${escapeHtml(l.name)}</option>`;
+  });
+
+  feeHeadDraftRows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = "hover:bg-gray-50";
+    tr.innerHTML = `
+      <td class="py-2 px-3">
+        <select onchange="feeHeadDraftRows[${idx}].ledgerId = this.value" class="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs bg-white outline-none">
+          ${incomeOpts}
+        </select>
+      </td>
+      <td class="py-2 px-3">
+        <input type="number" min="0" step="0.01" value="${row.amount || ''}" placeholder="0.00"
+          oninput="feeHeadDraftRows[${idx}].amount = parseFloat(this.value) || 0; updateFeeTotal();"
+          class="w-full text-right border border-gray-300 rounded px-2.5 py-1.5 text-xs font-mono outline-none">
+      </td>
+      <td class="py-2 px-3 text-center">
+        ${feeHeadDraftRows.length > 1 ? `<button type="button" onclick="feeHeadDraftRows.splice(${idx}, 1); renderFeeHeadRows();" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>` : '-'}
+      </td>
+    `;
+    if (row.ledgerId) tr.querySelector('select').value = row.ledgerId;
+    tbody.appendChild(tr);
+  });
+
+  updateFeeTotal();
+}
+
+function addFeeHeadRow() {
+  const incomeL = ledgers.find(l => ['Direct Income', 'Indirect Income'].includes(l.group));
+  feeHeadDraftRows.push({ ledgerId: incomeL ? incomeL.id : '', amount: 0 });
+  renderFeeHeadRows();
+}
+
+function updateFeeTotal() {
+  const total = feeHeadDraftRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const el = document.getElementById('feeTotalDisplay');
+  if (el) el.innerText = `₹${fmt(total)}`;
+}
+
+async function handleFeeCollectionSubmit(e) {
+  e.preventDefault();
+  if (!currentSchoolId) return showToast("Session expired! Please login.", true);
+
+  const validHeads = feeHeadDraftRows.filter(r => r.ledgerId && r.amount > 0);
+  const totalFee = validHeads.reduce((s, r) => s + r.amount, 0);
+
+  if (totalFee <= 0 || validHeads.length === 0) {
+    return showToast("Please enter at least one Fee Head amount greater than ₹0!", true);
+  }
+
+  const depositLedgerId = document.getElementById('feeDepositLedgerSelect').value;
+  if (!depositLedgerId) return showToast("Please select a Cash or Bank account to deposit!", true);
+
+  const vchNo = document.getElementById('feeReceiptNo').value;
+  const date = document.getElementById('feeCollectionDate').value;
+  const admNo = document.getElementById('feeAdmNo').value.trim();
+  const sClass = document.getElementById('feeStudentClass').value;
+  const sName = document.getElementById('feeStudentName').value.trim();
+  const months = document.getElementById('feeMonths').value.trim();
+  const payMode = document.getElementById('feePayMode').value;
+  const refNo = document.getElementById('feeRefNo').value.trim() || `REC-${admNo}`;
+
+  // Construct Double-Entry Accounting Rows:
+  // Debit: Cash/Bank Account (Total Fee)
+  // Credit: Individual Fee Income Ledgers
+  const voucherRows = [
+    {
+      ledgerId: depositLedgerId,
+      dr: totalFee,
+      cr: 0,
+      remark: `Fee Receipt #${vchNo} | Adm: ${admNo} (${sName})`
+    },
+    ...validHeads.map(h => ({
+      ledgerId: h.ledgerId,
+      dr: 0,
+      cr: h.amount,
+      remark: `${sName} (${sClass}) - ${months}`
+    }))
+  ];
+
+  const narrationText = `Student Fee Collected: ${sName} (Adm No: ${admNo}, ${sClass}) | Period: ${months}`;
+
+  const btn = document.getElementById('btnCollectFeeSubmit');
+  btn.disabled = true;
+  btn.innerText = "Posting Fee & Voucher...";
+
+  const { error } = await sbClient.from('vouchers').insert([{
+    school_id: currentSchoolId,
+    voucher_no: vchNo,
+    voucher_date: date,
+    voucher_type: 'Receipt',
+    ref_mode: payMode,
+    ref_no: refNo,
+    narration: narrationText,
+    rows: voucherRows,
+    created_by: CURRENT_USER
+  }]);
+
+  btn.disabled = false;
+  btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> Collect Fee &amp; Auto-Post Voucher`;
+
+  if (error) {
+    return showToast("Fee Sync Error: " + error.message, true);
+  }
+
+  recordAuditLog('CREATE', vchNo, `Collected Fee ₹${fmt(totalFee)} from ${sName} (${sClass}) - Auto-Posted Receipt Voucher`);
+  document.getElementById('feeAdmNo').value = '';
+  document.getElementById('feeStudentName').value = '';
+  document.getElementById('feeRefNo').value = '';
+
+  await syncSchoolDataFromCloud();
+  showToast(`Fee Collected! Receipt & Voucher ${vchNo} posted to accounts.`);
+  printVoucherSlip(vchNo);
+}
+
+function renderFeeReceiptsRegister() {
+  const tbody = document.getElementById('feeReceiptsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const search = (document.getElementById('feeReceiptSearchInput')?.value || '').toLowerCase();
+  const feeReceipts = vouchers.filter(v => 
+    v.type === 'Receipt' && 
+    v.narration.toLowerCase().includes('student fee collected') &&
+    (!search || v.id.toLowerCase().includes(search) || v.narration.toLowerCase().includes(search))
+  );
+
+  if (feeReceipts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-gray-400 italic">No student fee receipts collected yet.</td></tr>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  feeReceipts.forEach(v => {
+    const drRow = v.rows.find(r => r.dr > 0);
+    const depositAcc = drRow && ledgerMap.get(drRow.ledgerId) ? ledgerMap.get(drRow.ledgerId).name : 'Cash/Bank';
+    const total = drRow ? drRow.dr : 0;
+
+    const tr = document.createElement('tr');
+    tr.className = "hover:bg-emerald-50/40 border-b border-gray-100";
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono">${v.date}</td>
+      <td class="py-2.5 px-3 font-mono font-bold text-[#00407a]">${v.id}</td>
+      <td class="py-2.5 px-3 font-medium text-gray-800">${escapeHtml(v.narration.replace('Student Fee Collected: ', ''))}</td>
+      <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800">${escapeHtml(depositAcc)} (${v.refMode})</span></td>
+      <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">₹${fmt(total)}</td>
+      <td class="py-2.5 px-3 text-center no-print">
+        <button onclick="printVoucherSlip('${v.id}')" class="bg-gray-100 hover:bg-blue-100 text-[#00407a] px-2.5 py-1 rounded text-[11px] font-bold">
+          <i class="fa-solid fa-print mr-1"></i> Receipt
+        </button>
+      </td>
+    `;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+}
+
+// --- EXISTING ACCOUNTING & REPORT FUNCTIONS ---
 function buildLedgerIndex() {
   ledgerMap.clear();
   let opts = '<option value="" disabled selected>-- Select Ledger --</option>';
@@ -268,21 +510,19 @@ function recordAuditLog(action, item, details) {
   const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  const logEntry = {
+  auditLogs.unshift({
     timestamp: `${dateStr} ${timeStr}`,
     action: action.toUpperCase(),
     item,
     user: CURRENT_USER,
     details
-  };
-
-  auditLogs.unshift(logEntry);
+  });
   renderAuditTrailLog();
 }
 
 function navigateTo(viewId, category, pageTitle) {
   const views = [
-    'add-ledger', 'add-subledger', 'voucher-entry', 'day-book', 'passbook',
+    'collect-fee', 'fee-receipts', 'add-ledger', 'add-subledger', 'voucher-entry', 'day-book', 'passbook',
     'ledger-statement', 'trial-balance', 'income-expenditure', 'balance-sheet', 'audit-trail'
   ];
 
@@ -309,6 +549,7 @@ function navigateTo(viewId, category, pageTitle) {
   document.getElementById('breadcrumbPage').innerText = pageTitle;
 
   calculateMasterBalances();
+  if (viewId === 'fee-receipts') renderFeeReceiptsRegister();
   if (viewId === 'day-book') renderDayBookEntries();
   if (viewId === 'passbook') renderPassbookData();
   if (viewId === 'ledger-statement') renderSelectedLedgerStatement();
@@ -401,9 +642,7 @@ function exportPageToPdf(elementId, title) {
 
 function exportLedgersToExcel() {
   let csv = "Account Group,Ledger Name,In-Charge,Opening Balance,Balance Type\n";
-  ledgers.forEach(l => {
-    csv += `"${l.group}","${l.name}","${l.incharge}","${l.opBal}","${l.opType}"\n`;
-  });
+  ledgers.forEach(l => csv += `"${l.group}","${l.name}","${l.incharge}","${l.opBal}","${l.opType}"\n`);
   downloadCsvFile("Ledger_Master_List", csv);
 }
 
@@ -563,9 +802,7 @@ function exportBalanceSheetToExcel() {
 
 function exportAuditTrailToExcel() {
   let csv = "Timestamp,Action,Voucher / Item,Performed By,Description & Financial Impact\n";
-  auditLogs.forEach(log => {
-    csv += `"${log.timestamp}","${log.action}","${log.item}","${log.user}","${log.details}"\n`;
-  });
+  auditLogs.forEach(log => csv += `"${log.timestamp}","${log.action}","${log.item}","${log.user}","${log.details}"\n`);
   downloadCsvFile("Audit_Trail_Changes_Log", csv);
 }
 
@@ -573,6 +810,11 @@ function exportAuditTrailToExcel() {
 function printVoucherSlip(voucherId) {
   const vch = vouchers.find(v => v.id === voucherId);
   if (!vch) return showToast('Voucher not found!', true);
+
+  if (currentProfile && currentProfile.schools) {
+    document.getElementById('slipSchoolName').innerText = currentProfile.schools.name;
+    document.getElementById('slipSchoolSub').innerText = `${currentProfile.schools.city || ''}, ${currentProfile.schools.state || ''}`;
+  }
 
   document.getElementById('slipVchNo').innerText = vch.id;
   document.getElementById('slipDate').innerText = vch.date;
@@ -1176,7 +1418,7 @@ function renderPassbookData() {
   const ledger = ledgerMap.get(select.value || (ledgers[0] ? ledgers[0].id : ''));
   if (!ledger) return;
 
-  document.getElementById('passbookOpBal').innerText = `₹${fmt(ledger.opBal)} ${ledger.opType}`;
+  document.getElementById('passbookOpBal').innerText = `₹${fmt(ledger.opBal)}${ledger.opType}`;
   const tbody = document.getElementById('passbookTableBody');
   tbody.innerHTML = '';
 
@@ -1188,255 +1430,3 @@ function renderPassbookData() {
   trOp.className = "bg-gray-50 italic font-semibold text-gray-600";
   trOp.innerHTML = `
     <td class="py-2 px-3">2026-04-01</td>
-    <td class="py-2 px-3">-</td>
-    <td class="py-2 px-3">Opening Balance Brought Forward</td>
-    <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Dr' ? '₹' + fmt(ledger.opBal) : '-'}</td>
-    <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Cr' ? '₹' + fmt(ledger.opBal) : '-'}</td>
-    <td class="py-2 px-3 text-right font-mono font-bold text-gray-800">₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}</td>
-  `;
-  frag.appendChild(trOp);
-
-  for (let i = vouchers.length - 1; i >= 0; i--) {
-    const v = vouchers[i];
-    for (let j = 0; j < v.rows.length; j++) {
-      const r = v.rows[j];
-      if (r.ledgerId === ledger.id) {
-        running += (r.dr - r.cr);
-        if (r.dr > 0) totalIn += r.dr;
-        const opp = v.rows.find(x => x.ledgerId !== ledger.id);
-        const oppLed = opp ? ledgerMap.get(opp.ledgerId) : null;
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-blue-50/40 border-b border-gray-100";
-        tr.innerHTML = `
-          <td class="py-2 px-3 text-gray-600">${v.date}</td>
-          <td class="py-2 px-3 font-mono text-[#00407a] font-bold">${v.id}</td>
-          <td class="py-2 px-3">
-            <span class="font-medium text-gray-900">${oppLed ? escapeHtml(oppLed.name) : 'Multiple Ledgers'}</span>
-            <span class="block text-[10px] text-gray-400">${escapeHtml(v.narration)}</span>
-          </td>
-          <td class="py-2 px-3 text-right font-mono text-emerald-700 font-semibold">${r.dr > 0 ? '₹' + fmt(r.dr) : '-'}</td>
-          <td class="py-2 px-3 text-right font-mono text-rose-700 font-semibold">${r.cr > 0 ? '₹' + fmt(r.cr) : '-'}</td>
-          <td class="py-2 px-3 text-right font-mono font-bold text-gray-900">₹${fmt(Math.abs(running))} <span class="text-[10px] text-gray-500">${running >= 0 ? 'Dr' : 'Cr'}</span></td>
-        `;
-        frag.appendChild(tr);
-      }
-    }
-  }
-
-  tbody.appendChild(frag);
-  document.getElementById('passbookTotalIn').innerText = `₹${fmt(totalIn)}`;
-  document.getElementById('passbookClosingBal').innerText = `₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}`;
-}
-
-function renderSelectedLedgerStatement() {
-  const select = document.getElementById('ledgerSelectStatement');
-  const ledger = ledgerMap.get(select.value || (ledgers[0] ? ledgers[0].id : ''));
-  if (!ledger) return;
-
-  document.getElementById('stmtLedgerName').innerText = ledger.name;
-  document.getElementById('stmtLedgerGroup').innerText = ledger.group;
-  document.getElementById('stmtOpeningBal').innerText = `₹${fmt(ledger.opBal)} ${ledger.opType}`;
-
-  const tbody = document.getElementById('ledgerStatementTableBody');
-  tbody.innerHTML = '';
-
-  let running = (ledger.opType === 'Dr' ? ledger.opBal : -ledger.opBal);
-  const frag = document.createDocumentFragment();
-
-  const trOp = document.createElement('tr');
-  trOp.className = "bg-gray-50 italic font-semibold text-gray-600";
-  trOp.innerHTML = `
-    <td class="py-2 px-3">2026-04-01</td>
-    <td class="py-2 px-3">-</td>
-    <td class="py-2 px-3">Opening Balance B/F</td>
-    <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Dr' ? '₹' + fmt(ledger.opBal) : '-'}</td>
-    <td class="py-2 px-3 text-right font-mono">${ledger.opType === 'Cr' ? '₹' + fmt(ledger.opBal) : '-'}</td>
-    <td class="py-2 px-3 text-right font-mono font-bold text-gray-800">₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}</td>
-  `;
-  frag.appendChild(trOp);
-
-  for (let i = vouchers.length - 1; i >= 0; i--) {
-    const v = vouchers[i];
-    for (let j = 0; j < v.rows.length; j++) {
-      const r = v.rows[j];
-      if (r.ledgerId === ledger.id) {
-        running += (r.dr - r.cr);
-        const opp = v.rows.find(x => x.ledgerId !== ledger.id);
-        const oppLed = opp ? ledgerMap.get(opp.ledgerId) : null;
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-amber-50/40 border-b border-gray-100";
-        tr.innerHTML = `
-          <td class="py-2 px-3 text-gray-600">${v.date}</td>
-          <td class="py-2 px-3 font-mono text-[#00407a] font-bold">${v.id}</td>
-          <td class="py-2 px-3 font-medium text-gray-900">
-            ${oppLed ? escapeHtml(oppLed.name) : 'Multiple Ledger Allocation'}
-            <span class="block text-[10px] text-gray-400">${escapeHtml(v.narration)}</span>
-          </td>
-          <td class="py-2 px-3 text-right font-mono text-blue-700">${r.dr > 0 ? '₹' + fmt(r.dr) : '-'}</td>
-          <td class="py-2 px-3 text-right font-mono text-amber-700">${r.cr > 0 ? '₹' + fmt(r.cr) : '-'}</td>
-          <td class="py-2 px-3 text-right font-mono font-bold text-gray-900">₹${fmt(Math.abs(running))} <span class="text-[10px] text-gray-500">${running >= 0 ? 'Dr' : 'Cr'}</span></td>
-        `;
-        frag.appendChild(tr);
-      }
-    }
-  }
-
-  tbody.appendChild(frag);
-  document.getElementById('stmtClosingBal').innerText = `₹${fmt(Math.abs(running))} ${running >= 0 ? 'Dr' : 'Cr'}`;
-}
-
-// AUDIT & FINANCIAL BALANCE ENGINE
-function calculateMasterBalances() {
-  currentBalancesMap = {};
-  ledgers.forEach(l => {
-    currentBalancesMap[l.id] = (l.opType === 'Dr' ? l.opBal : -l.opBal);
-  });
-
-  let todaySum = 0;
-  const todayIso = new Date().toISOString().slice(0, 10);
-
-  vouchers.forEach(v => {
-    const isToday = (v.date === todayIso && v.type === 'Receipt');
-    v.rows.forEach(r => {
-      if (currentBalancesMap[r.ledgerId] !== undefined) {
-        currentBalancesMap[r.ledgerId] += (r.dr - r.cr);
-      }
-      if (isToday) todaySum += r.dr;
-    });
-  });
-
-  const cashObj = ledgers.find(l => l.group === 'Cash-in-Hand');
-  const bankObj = ledgers.find(l => l.group === 'Bank Accounts');
-  document.getElementById('quickCashDisplay').innerText = `Cash: ₹${fmt(cashObj ? currentBalancesMap[cashObj.id] : 0)}`;
-  document.getElementById('quickBankDisplay').innerText = `Bank: ₹${fmt(bankObj ? currentBalancesMap[bankObj.id] : 0)}`;
-  document.getElementById('todayCollectionAmount').innerText = `₹${fmt(todaySum)}`;
-
-  renderTrialBalance();
-  renderIncomeExpAndBS();
-}
-
-function renderTrialBalance() {
-  const tbody = document.getElementById('trialBalanceTableBody');
-  tbody.innerHTML = '';
-  let grandDr = 0, grandCr = 0, sno = 1;
-  const frag = document.createDocumentFragment();
-
-  ledgers.forEach(l => {
-    const net = currentBalancesMap[l.id] || 0;
-    const drAmt = net > 0 ? net : 0;
-    const crAmt = net < 0 ? Math.abs(net) : 0;
-    grandDr += drAmt;
-    grandCr += crAmt;
-
-    const tr = document.createElement('tr');
-    tr.className = "hover:bg-gray-50 border-b border-gray-100";
-    tr.innerHTML = `
-      <td class="py-2 px-4 text-gray-500 font-mono">${sno++}</td>
-      <td class="py-2 px-4 font-semibold text-gray-900">${escapeHtml(l.name)}</td>
-      <td class="py-2 px-4 text-gray-600">${escapeHtml(l.group)}</td>
-      <td class="py-2 px-4 text-right font-mono text-gray-800">${drAmt > 0 ? '₹' + fmt(drAmt) : '-'}</td>
-      <td class="py-2 px-4 text-right font-mono text-gray-800">${crAmt > 0 ? '₹' + fmt(crAmt) : '-'}</td>
-    `;
-    frag.appendChild(tr);
-  });
-
-  tbody.appendChild(frag);
-  document.getElementById('tbGrandDebit').innerText = `₹${fmt(grandDr)}`;
-  document.getElementById('tbGrandCredit').innerText = `₹${fmt(grandCr)}`;
-
-  const badge = document.getElementById('trialBalBadge');
-  const isBalanced = Math.abs(grandDr - grandCr) < 0.01;
-  badge.className = `px-3 py-1 rounded text-xs font-bold border ${isBalanced ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'}`;
-  badge.innerHTML = isBalanced ? '<i class="fa-solid fa-circle-check mr-1"></i> Books Perfectly Balanced' : `<i class="fa-solid fa-circle-exclamation mr-1"></i> Mismatch: ₹${fmt(Math.abs(grandDr - grandCr))}`;
-}
-
-function renderIncomeExpAndBS() {
-  const expList = document.getElementById('incExpExpList');
-  const incList = document.getElementById('incExpIncList');
-  const liabList = document.getElementById('bsLiabList');
-  const assetList = document.getElementById('bsAssetList');
-
-  expList.innerHTML = ''; incList.innerHTML = ''; liabList.innerHTML = ''; assetList.innerHTML = '';
-  let totalExp = 0, totalInc = 0, totalLiab = 0, totalAsset = 0;
-
-  ledgers.forEach(l => {
-    const net = currentBalancesMap[l.id] || 0;
-    if (l.group === 'Indirect Expenses') {
-      totalExp += net;
-      expList.innerHTML += `<div class="flex justify-between py-1 text-gray-700"><span>${escapeHtml(l.name)}</span><span class="font-mono font-semibold">₹${fmt(net)}</span></div>`;
-    } else if (['Direct Income', 'Indirect Income'].includes(l.group)) {
-      const amt = Math.abs(net);
-      totalInc += amt;
-      incList.innerHTML += `<div class="flex justify-between py-1 text-gray-700"><span>${escapeHtml(l.name)}</span><span class="font-mono font-semibold">₹${fmt(amt)}</span></div>`;
-    }
-
-    if (['Fixed Assets', 'Current Assets', 'Bank Accounts', 'Cash-in-Hand'].includes(l.group)) {
-      totalAsset += net;
-      assetList.innerHTML += `<div class="flex justify-between py-1 text-gray-700"><div><span class="font-medium">${escapeHtml(l.name)}</span><span class="text-[10px] text-gray-400 block">${l.group}</span></div><span class="font-mono font-semibold">₹${fmt(net)}</span></div>`;
-    } else if (['Current Liabilities', 'Corpus / Capital Fund'].includes(l.group)) {
-      const amt = Math.abs(net);
-      totalLiab += amt;
-      liabList.innerHTML += `<div class="flex justify-between py-1 text-gray-700"><div><span class="font-medium">${escapeHtml(l.name)}</span><span class="text-[10px] text-gray-400 block">${l.group}</span></div><span class="font-mono font-semibold">₹${fmt(amt)}</span></div>`;
-    }
-  });
-
-  document.getElementById('incExpTotalExpDisplay').innerText = `₹${fmt(totalExp)}`;
-  document.getElementById('incExpTotalIncDisplay').innerText = `₹${fmt(totalInc)}`;
-
-  const netSurplus = totalInc - totalExp;
-  const surplusBadge = document.getElementById('pnlSurplusBadge');
-  surplusBadge.className = `px-3 py-1 rounded text-xs font-bold border ${netSurplus >= 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'}`;
-  surplusBadge.innerText = `${netSurplus >= 0 ? 'Net Surplus' : 'Net Deficit'}: ₹${fmt(Math.abs(netSurplus))}`;
-
-  totalLiab += netSurplus;
-  liabList.innerHTML += `
-    <div class="flex justify-between py-1 text-blue-900 bg-blue-50 p-1.5 rounded font-semibold mt-2">
-      <span>Add: Current Year Surplus</span>
-      <span class="font-mono">₹${fmt(netSurplus)}</span>
-    </div>
-  `;
-
-  document.getElementById('bsTotalLiabDisplay').innerText = `₹${fmt(totalLiab)}`;
-  document.getElementById('bsTotalAssetDisplay').innerText = `₹${fmt(totalAsset)}`;
-
-  const bsBadge = document.getElementById('bsMatchBadge');
-  const isMatched = Math.abs(totalLiab - totalAsset) < 1.0;
-  bsBadge.className = `px-3 py-1 rounded text-xs font-bold border ${isMatched ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'}`;
-  bsBadge.innerHTML = isMatched ? '<i class="fa-solid fa-circle-check mr-1"></i> Balance Sheet Matched' : `<i class="fa-solid fa-circle-exclamation mr-1"></i> Diff: ₹${fmt(Math.abs(totalLiab - totalAsset))}`;
-}
-
-function populateDropdownOptions() {
-  const subParentSelect = document.getElementById('inputSubParentLedger');
-  if (subParentSelect) {
-    subParentSelect.innerHTML = '<option value="" disabled selected>-- Select Parent Ledger --</option>';
-    ledgers.forEach(l => {
-      subParentSelect.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`;
-    });
-  }
-
-  const pSelect = document.getElementById('passbookAccountSelect');
-  pSelect.innerHTML = '';
-  ledgers.filter(l => ['Bank Accounts', 'Cash-in-Hand'].includes(l.group)).forEach(l => {
-    pSelect.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`;
-  });
-
-  const sSelect = document.getElementById('ledgerSelectStatement');
-  sSelect.innerHTML = '';
-  ledgers.forEach(l => {
-    sSelect.innerHTML += `<option value="${l.id}">${escapeHtml(l.name)} (${l.group})</option>`;
-  });
-}
-
-function showTodaySummaryModal() {
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const todayVouchers = vouchers.filter(v => v.date === todayIso && v.type === 'Receipt');
-  const todaySum = todayVouchers.reduce((acc, v) => acc + v.rows.reduce((s, r) => s + r.dr, 0), 0);
-  showToast(`Today's Collection: ₹${fmt(todaySum)} across ${todayVouchers.length} vouchers.`);
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
