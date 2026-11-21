@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCHOOLMITRA - Financial Accounting & School ERP</title>
+  <title>SCHOOLMITRA - Fee & Financial Accounting ERP</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +38,7 @@
   <!-- LEFT SIDEBAR -->
   <aside id="mainSidebar" class="w-64 bg-[#00407a] text-white flex-shrink-0 flex flex-col transition-all duration-300 z-50 shadow-lg no-print">
     <div class="h-14 bg-[#003362] px-4 flex items-center justify-between border-b border-blue-900/50">
-      <div class="flex items-center space-x-1 tracking-wider text-xl font-extrabold cursor-pointer" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')">
+      <div class="flex items-center space-x-1 tracking-wider text-xl font-extrabold cursor-pointer" onclick="navigateTo('collect-fee', 'Fee Management', 'Collect Student Fee')">
         <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
       </div>
       <button onclick="toggleSidebarCollapse()" class="text-white/70 hover:text-white md:hidden">
@@ -49,11 +49,33 @@
     <!-- SIDEBAR: Only visible if is_super_admin is true -->
     <div id="superAdminNavBlock" class="hidden px-4 py-2 border-t border-white/10 bg-[#002b54]/60">
       <button onclick="openMasterOnboardingModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-bold px-3 py-2 rounded text-xs flex items-center justify-center gap-1.5 shadow">
-        <i class="fa-solid fa-crown"></i> Setup New School
+        <i class="fa-solid fa-crown"></i> Master: Add School
       </button>
     </div>
 
     <div class="flex-grow overflow-y-auto sidebar-scroll py-2 text-xs font-normal">
+      
+      <!-- MODULE 0: FEE MANAGEMENT (NEW INTEGRATED MODULE) -->
+      <div class="bg-[#003362]/60 border-b border-white/10">
+        <button onclick="toggleAccordion('feeMgmtSubmenu', 'feeMgmtArrow')" class="w-full flex items-center justify-between px-4 py-3 text-white font-semibold hover:bg-white/5 transition">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-indian-rupee-sign text-sm w-4 text-center text-emerald-400"></i>
+            <span class="text-sm tracking-wide">Fee Management</span>
+          </div>
+          <i id="feeMgmtArrow" class="fa-solid fa-chevron-up text-[10px] text-emerald-300"></i>
+        </button>
+
+        <div id="feeMgmtSubmenu" class="bg-[#002b54] py-1 text-white/80 space-y-0.5">
+          <button id="navLink-collect-fee" onclick="navigateTo('collect-fee', 'Fee Management', 'Collect Student Fee')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs font-semibold text-white bg-white/15">
+            <i class="fa-solid fa-hand-holding-dollar w-4 mr-2 text-emerald-400"></i> Collect Student Fee
+          </button>
+          <button id="navLink-fee-receipts" onclick="navigateTo('fee-receipts', 'Fee Management', 'Fee Receipts Register')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
+            <i class="fa-solid fa-file-invoice w-4 mr-2 text-amber-300"></i> Fee Receipts Register
+          </button>
+        </div>
+      </div>
+
+      <!-- FINANCIAL ACCOUNTING MODULE -->
       <div class="bg-[#003362]/60 border-b border-white/5">
         <button onclick="toggleAccordion('finAccountingSubmenu', 'finAccountingArrow')" class="w-full flex items-center justify-between px-4 py-3 text-white font-semibold hover:bg-white/5 transition">
           <div class="flex items-center space-x-3">
@@ -65,7 +87,7 @@
 
         <div id="finAccountingSubmenu" class="bg-[#002b54] py-1 text-white/80 space-y-0.5">
           <div class="px-4 pt-2 pb-1 text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Entries &amp; Ledgers</div>
-          <button id="navLink-add-ledger" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs font-semibold text-white bg-white/15">
+          <button id="navLink-add-ledger" onclick="navigateTo('add-ledger', 'Financial Accounting', 'Add Ledger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
             <i class="fa-regular fa-folder-open w-4 mr-2 text-amber-400"></i> Add Ledger
           </button>
           <button id="navLink-add-subledger" onclick="navigateTo('add-subledger', 'Financial Accounting', 'Add SubLedger')" class="w-full text-left pl-7 pr-4 py-2 hover:bg-white/10 hover:text-white flex items-center text-xs">
@@ -167,12 +189,12 @@
 
     <div class="bg-gray-100 border-b border-gray-200 px-6 py-2 flex items-center justify-between text-xs text-gray-600 flex-shrink-0 no-print">
       <div class="flex items-center space-x-2 font-medium">
-        <span id="breadcrumbCategory" class="text-gray-700 font-semibold">Financial Accounting</span>
+        <span id="breadcrumbCategory" class="text-gray-700 font-semibold">Fee Management</span>
         <span class="text-gray-400">&gt;</span>
-        <span id="breadcrumbPage" class="text-gray-900 font-bold">Add Ledger</span>
+        <span id="breadcrumbPage" class="text-gray-900 font-bold">Collect Student Fee</span>
       </div>
       <div class="flex items-center space-x-3 text-[11px]">
-        <span class="font-mono text-gray-500"><i class="fa-regular fa-clock mr-1"></i> 04-Nov-2026</span>
+        <span class="font-mono text-gray-500"><i class="fa-regular fa-clock mr-1"></i> <span id="liveHeaderDate">21-Nov-2026</span></span>
         <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono font-semibold" id="quickCashDisplay">Cash: ₹0</span>
         <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-semibold" id="quickBankDisplay">Bank: ₹0</span>
       </div>
@@ -180,9 +202,166 @@
 
     <!-- MAIN SCROLLABLE BODY -->
     <main class="flex-grow overflow-y-auto p-4 sm:p-6 bg-[#f4f6f9] custom-scroll">
+
+      <!-- MODULE 0A: COLLECT STUDENT FEE (AUTO-POSTS TO FINANCIAL VOUCHER) -->
+      <section id="view-collect-fee" class="space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00]">Collect Student Fee</h2>
+            <p class="text-xs text-gray-500">Collecting fee automatically posts a double-entry Receipt Voucher (F6) in Financial Accounting.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <i class="fa-solid fa-link mr-1"></i> Auto-Voucher Sync Active
+          </span>
+        </div>
+
+        <form id="feeCollectionForm" onsubmit="handleFeeCollectionSubmit(event)" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Left: Student & Payment Details -->
+          <div class="lg:col-span-5 bg-white rounded border border-gray-200 p-5 shadow-sm space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[#00407a] border-b pb-2">1. Student &amp; Receipt Details</h3>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Receipt No.</label>
+                <input type="text" id="feeReceiptNo" readonly class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-1.5 text-xs font-mono font-bold text-[#00407a]">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Collection Date <span class="text-red-500">*</span></label>
+                <input type="date" id="feeCollectionDate" required class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Admission No. <span class="text-red-500">*</span></label>
+                <input type="text" id="feeAdmNo" required placeholder="e.g. 1042" class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-mono outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Class &amp; Section <span class="text-red-500">*</span></label>
+                <select id="feeStudentClass" required class="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs outline-none">
+                  <option value="Nursery">Nursery</option>
+                  <option value="LKG">LKG</option>
+                  <option value="UKG">UKG</option>
+                  <option value="Class 1">Class 1</option>
+                  <option value="Class 2">Class 2</option>
+                  <option value="Class 3">Class 3</option>
+                  <option value="Class 4">Class 4</option>
+                  <option value="Class 5" selected>Class 5</option>
+                  <option value="Class 6">Class 6</option>
+                  <option value="Class 7">Class 7</option>
+                  <option value="Class 8">Class 8</option>
+                  <option value="Class 9">Class 9</option>
+                  <option value="Class 10">Class 10</option>
+                  <option value="Class 11">Class 11</option>
+                  <option value="Class 12">Class 12</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Student Full Name <span class="text-red-500">*</span></label>
+              <input type="text" id="feeStudentName" required placeholder="e.g. Aarav Sharma" class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Fee Months / Installment</label>
+              <input type="text" id="feeMonths" value="Nov-Dec 2026" placeholder="e.g. Apr-Jun 2026" class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs outline-none">
+            </div>
+
+            <div class="border-t pt-3 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#00407a]">2. Deposit Account (Debit Ledger)</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1">Payment Mode <span class="text-red-500">*</span></label>
+                  <select id="feePayMode" onchange="onFeePayModeChange()" class="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs font-bold outline-none">
+                    <option value="Cash">Cash</option>
+                    <option value="UPI / Online">UPI / Online Transfer</option>
+                    <option value="Cheque">Cheque / DD</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1">Deposit To (Dr. A/c) <span class="text-red-500">*</span></label>
+                  <select id="feeDepositLedgerSelect" required class="w-full bg-blue-50 border border-blue-300 rounded px-2.5 py-1.5 text-xs font-bold text-blue-900 outline-none"></select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">UTR / Cheque Reference No.</label>
+                <input type="text" id="feeRefNo" placeholder="Optional for Cash" class="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-mono outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Fee Heads Breakup (Credit Ledgers) -->
+          <div class="lg:col-span-7 bg-white rounded border border-gray-200 p-5 shadow-sm flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[#00407a]">3. Fee Heads Breakup (Direct Income Credit Ledgers)</h3>
+                <button type="button" onclick="addFeeHeadRow()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-2.5 py-1 rounded border border-gray-300">
+                  + Add Fee Head
+                </button>
+              </div>
+
+              <div class="overflow-x-auto border border-gray-200 rounded">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                    <tr>
+                      <th class="py-2 px-3">Fee Head (Mapped Income Ledger)</th>
+                      <th class="py-2 px-3 text-right w-36">Amount (₹)</th>
+                      <th class="py-2 px-3 w-12 text-center">Del</th>
+                    </tr>
+                  </thead>
+                  <tbody id="feeHeadsRowsContainer" class="divide-y divide-gray-100"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="mt-6 bg-emerald-50 border border-emerald-200 rounded p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div>
+                <span class="text-xs text-emerald-800 font-semibold block">Total Fee Payable &amp; Voucher Amount:</span>
+                <span id="feeTotalDisplay" class="text-2xl font-black font-mono text-emerald-900">₹0.00</span>
+              </div>
+              <button type="submit" id="btnCollectFeeSubmit" class="w-full sm:w-auto bg-[#198754] hover:bg-[#157347] text-white text-xs font-bold py-3 px-6 rounded shadow-md transition cursor-pointer flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check-circle"></i> Collect Fee &amp; Auto-Post Voucher
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- MODULE 0B: FEE RECEIPTS REGISTER -->
+      <section id="view-fee-receipts" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-[#e68a00]">Fee Receipts Register (Synced with Accounts)</h2>
+            <p class="text-xs text-gray-500">All student fee receipts automatically posted as Receipt Vouchers in Financial Accounting.</p>
+          </div>
+          <button onclick="navigateTo('collect-fee', 'Fee Management', 'Collect Student Fee')" class="bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold px-3 py-2 rounded shadow">
+            + Collect New Fee
+          </button>
+        </div>
+
+        <div class="bg-white rounded border border-gray-200 p-4 shadow-sm space-y-3">
+          <input type="text" id="feeReceiptSearchInput" oninput="renderFeeReceiptsRegister()" placeholder="Search Student Name, Adm No, or Voucher No..." class="w-full sm:w-80 border border-gray-300 rounded px-3 py-1.5 text-xs outline-none">
+          <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
+                <tr>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3">Voucher / Receipt No</th>
+                  <th class="py-2.5 px-3">Student &amp; Fee Details</th>
+                  <th class="py-2.5 px-3">Deposited In (Dr)</th>
+                  <th class="py-2.5 px-3 text-right">Amount (₹)</th>
+                  <th class="py-2.5 px-3 text-center no-print">Voucher Slip</th>
+                </tr>
+              </thead>
+              <tbody id="feeReceiptsTableBody" class="divide-y divide-gray-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
       
       <!-- MODULE 1: ADD LEDGER -->
-      <section id="view-add-ledger" class="space-y-6">
+      <section id="view-add-ledger" class="space-y-6 hidden">
         <div class="flex justify-between items-center">
           <h2 class="text-xl font-bold text-[#e68a00]">Add Ledger</h2>
           <div class="flex items-center space-x-2">
@@ -369,7 +548,7 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-700 mb-1">* Voucher Date</label>
-              <input type="date" id="vchDateInput" value="2026-11-04" class="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs text-gray-800 outline-none">
+              <input type="date" id="vchDateInput" class="w-full bg-white border border-gray-300 rounded px-3 py-1.5 text-xs text-gray-800 outline-none">
             </div>
           </div>
 
@@ -455,7 +634,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Transaction Report (Day Book)</h2>
-            <p class="text-xs text-gray-500">Chronological register of all vouchers with Print Slip, Edit, &amp; Delete options</p>
+            <p class="text-xs text-gray-500">Chronological register of all vouchers (Manual + Auto Fee Receipts)</p>
           </div>
           <div class="flex items-center space-x-2">
             <button onclick="exportPageToPdf('dayBookTable', 'Day_Book_Transaction_Report')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
@@ -479,7 +658,7 @@
                 <option value="Contra">Contra Only</option>
               </select>
             </div>
-            <input type="text" id="dayBookSearchInput" oninput="renderDayBookEntries()" placeholder="Search Vch No or Ledger..." class="text-xs border border-gray-300 rounded px-3 py-1.5 w-60">
+            <input type="text" id="dayBookSearchInput" oninput="renderDayBookEntries()" placeholder="Search Vch No, Student, or Ledger..." class="text-xs border border-gray-300 rounded px-3 py-1.5 w-64">
           </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded">
@@ -492,7 +671,7 @@
                   <th class="py-2.5 px-3">Particulars</th>
                   <th class="py-2.5 px-3 text-right">Debit (₹)</th>
                   <th class="py-2.5 px-3 text-right">Credit (₹)</th>
-                  <th class="py-2.5 px-3">Narration / Ref</th>
+                  <th class="py-2.5 px-3">Narration / Student Info</th>
                   <th class="py-2.5 px-3 text-center no-print">Actions</th>
                 </tr>
               </thead>
@@ -623,7 +802,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Trial Balance</h2>
-            <p class="text-xs text-gray-500">Mathematical balance verification as on 04-Nov-2026</p>
+            <p class="text-xs text-gray-500">Mathematical balance verification</p>
           </div>
           <div class="flex items-center space-x-2">
             <div id="trialBalBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
@@ -713,7 +892,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Balance Sheet</h2>
-            <p class="text-xs text-gray-500">Liabilities &amp; Trust Fund = Assets as on 04-Nov-2026</p>
+            <p class="text-xs text-gray-500">Liabilities &amp; Trust Fund = Assets</p>
           </div>
           <div class="flex items-center space-x-2">
             <div id="bsMatchBadge" class="px-3 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Balance Sheet Matched</div>
@@ -758,7 +937,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h2 class="text-xl font-bold text-[#e68a00] mb-1">Audit Trail (Changes Log)</h2>
-            <p class="text-xs text-gray-500">Chronological history tracking who performed which accounting actions, corrections, and timestamps</p>
+            <p class="text-xs text-gray-500">Chronological history tracking who performed which accounting actions</p>
           </div>
           <div class="flex items-center space-x-2">
             <button onclick="exportPageToPdf('auditTable', 'Audit_Trail_Changes_Log')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-xs transition">
@@ -805,13 +984,13 @@
     </div>
   </div>
 
-  <!-- MODAL: PRINTABLE VOUCHER SLIP -->
+  <!-- MODAL: PRINTABLE VOUCHER / FEE RECEIPT SLIP -->
   <div id="printVoucherModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl border border-gray-300 overflow-hidden flex flex-col max-h-[92vh]">
       <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200 flex justify-between items-center no-print flex-shrink-0">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-receipt text-[#00407a]"></i>
-          <span class="text-xs font-bold text-gray-800">Print Voucher Transaction Slip</span>
+          <span class="text-xs font-bold text-gray-800">Print Voucher / Fee Receipt Slip</span>
         </div>
         <div class="flex items-center space-x-2">
           <button onclick="window.print()" class="bg-[#0062a3] hover:bg-[#004d80] text-white text-xs font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-sm">
@@ -825,9 +1004,9 @@
 
       <div id="slipPrintableArea" class="p-6 overflow-y-auto flex-grow bg-white text-gray-900 text-xs">
         <div class="text-center pb-4 border-b-2 border-gray-800">
-          <h2 class="text-lg font-black tracking-wide text-[#00407a] uppercase">DEMO PUBLIC SCHOOL</h2>
-          <p class="text-[11px] text-gray-600 font-semibold">Varanasi, Uttar Pradesh, India | Affiliation No: 2130000</p>
-          <p class="text-[10px] text-gray-500">Session: 2026-27 | Institutional Financial Voucher</p>
+          <h2 id="slipSchoolName" class="text-lg font-black tracking-wide text-[#00407a] uppercase">DEMO PUBLIC SCHOOL</h2>
+          <p id="slipSchoolSub" class="text-[11px] text-gray-600 font-semibold">Varanasi, Uttar Pradesh, India</p>
+          <p class="text-[10px] text-gray-500">Session: 2026-27 | Institutional Financial Voucher &amp; Receipt</p>
           <div class="mt-2 inline-block bg-gray-900 text-white font-mono font-bold text-xs uppercase px-3 py-0.5 rounded tracking-wider" id="slipVoucherTypeHeading">
             RECEIPT VOUCHER
           </div>
@@ -835,12 +1014,12 @@
 
         <div class="grid grid-cols-2 gap-4 py-3 border-b border-gray-200 text-[11px]">
           <div>
-            <p><span class="font-bold text-gray-600">Voucher No:</span> <strong id="slipVchNo" class="font-mono text-sm text-[#00407a]">VR-000</strong></p>
+            <p><span class="font-bold text-gray-600">Voucher / Receipt No:</span> <strong id="slipVchNo" class="font-mono text-sm text-[#00407a]">VR-000</strong></p>
             <p><span class="font-bold text-gray-600">Payment Mode:</span> <span id="slipPaymentMode" class="font-semibold">-</span></p>
             <p><span class="font-bold text-gray-600">Cheque / UTR Ref:</span> <span id="slipRefNo" class="font-mono">-</span></p>
           </div>
           <div class="text-right">
-            <p><span class="font-bold text-gray-600">Date:</span> <strong id="slipDate" class="font-mono text-xs">2026-11-04</strong></p>
+            <p><span class="font-bold text-gray-600">Date:</span> <strong id="slipDate" class="font-mono text-xs">2026-11-21</strong></p>
             <p><span class="font-bold text-gray-600">Status:</span> <span class="text-emerald-700 font-bold">Posted &amp; Verified</span></p>
             <p><span class="font-bold text-gray-600">Printed On:</span> <span id="slipPrintTime" class="font-mono text-[10px] text-gray-500">-</span></p>
           </div>
@@ -868,7 +1047,7 @@
         </div>
 
         <div class="p-2.5 bg-gray-50 border border-gray-200 rounded text-xs mb-8">
-          <span class="font-bold text-gray-700">Narration / Being:</span>
+          <span class="font-bold text-gray-700">Narration / Student Details:</span>
           <p id="slipNarration" class="italic text-gray-800 mt-0.5">-</p>
         </div>
 
@@ -938,7 +1117,7 @@
         <div class="text-xl font-extrabold tracking-wider">
           <span class="text-white">SCHOOL</span><span class="text-amber-400">MITRA</span>
         </div>
-        <p class="text-xs text-blue-200 mt-1 font-medium">Financial Accounting System</p>
+        <p class="text-xs text-blue-200 mt-1 font-medium">Fee &amp; Financial Accounting System</p>
       </div>
 
       <form id="authLoginForm" onsubmit="handleAuthLogin(event)" class="p-6 space-y-4">
